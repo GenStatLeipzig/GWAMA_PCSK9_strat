@@ -46,14 +46,19 @@ You will need to customize a source file, indicating
 3) Interaction Tests
 4) LD Score regression
 5) Fine-mapping
+
     a) GCTA conditional joint analyses
     b) Credible Sets
+
 6) Co-localization
+
     a) Preparation of data
     b) Run within PCSK9 data
     c) Run against eQTLs
     d) Rund against other GWAS traits
+
 7) Mendelian Randomization
+
     a) Direction 1: PCSK9 on LDL-C
     b) Direction 2: LDL-C on PCSK9
     
