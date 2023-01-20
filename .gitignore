@@ -37,3 +37,16 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# other stuff
+SourceFile_forostar.R
+SourceFile_amanMRO.R
+SourceFile_angmar.R
+data/*
+helperScripts/*
+scripts/*.html
+scripts/*.out
+results/*
+temp/*
+tables/*
+figures/*
