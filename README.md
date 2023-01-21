@@ -52,12 +52,8 @@ You will need to customize a source file, indicating
     1. Preparation of data
     2. Run within PCSK9 data
     3. Run against eQTLs
-    4. Rund against other GWAS traits
+    4. Run against other GWAS traits
 7. Mendelian Randomization
     1. Direction 1: PCSK9 on LDL-C
     2. Direction 2: LDL-C on PCSK9
     
-
-
-
-
