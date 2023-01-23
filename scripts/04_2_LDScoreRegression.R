@@ -15,9 +15,9 @@
 #' ***
 #' I want to estimate the heritability of PCSK9 in all subsets, and then perform a correlation test within my PCSK9 traits and with lipids. 
 #' 
-#' In script 08_a, I extracted the GWAS summary statistics and saved them in the format necessary for LDSC. Then, I generated all necessary LDSC commands, which were executed in a putty shell, not in R (reticulate connection with python sometimes unstable). 
+#' In script 04_1, I extracted the GWAS summary statistics and saved them in the format necessary for LDSC. Then, I generated all necessary LDSC commands, which were executed in a putty shell, not in R (reticulate connection with python sometimes unstable). 
 #' 
-#' In thus R script (08_b), I read in the LDSC log files for heritability and genetic correlation and generate some plots. 
+#' In thus R script (04_2), I read in the LDSC log files for heritability and genetic correlation and generate some plots. 
 #' 
 #' # Initialize ####
 #' ***
@@ -85,7 +85,7 @@ heritab = foreach(i = 1:dim(myToDoTable)[1])%do%{
 
 heritab = rbindlist(heritab)
 heritab
-save(heritab, file = "../results/08_LDSC_Heritability.RData")
+save(heritab, file = "../results/04_LDSC_Heritability.RData")
 
 heritab1 = copy(heritab)
 heritab1 = heritab1[grepl("PCSK9",trait)]
@@ -172,7 +172,7 @@ p2<- ggplot(gencortab1, aes(x=lipid, y=rg, fill=sex)) +
                 position=position_dodge(.9))
 p2
 
-save(gencortab, file = "../results/08_LDSC_GeneticCorrelation.RData")
+save(gencortab, file = "../results/04_LDSC_GeneticCorrelation.RData")
 
 #' # Step 6: Combine plots ####
 #' ***
