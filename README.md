@@ -57,3 +57,8 @@ You will need to customize a source file, indicating
     1. Direction 1: PCSK9 on LDL-C
     2. Direction 2: LDL-C on PCSK9
     
+## Figures
+
+1. Interaction plot of 3-way interaction
+2. Heatmap of independent SNPs at _PCSK9_ gene loci
+3. Co-localization plot at _PCSK9_ gene loci (eQTLs + lipids + CAD)
