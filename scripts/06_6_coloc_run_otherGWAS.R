@@ -51,7 +51,7 @@ ToDoList2 = ToDoList2[candidateGene == "PCSK9",]
 ToDoList2[,otherGWAS := "CAD"]
 
 ToDoList3 = copy(ToDoList)
-ToDoList3 = ToDoList3[candidateGene == "SLCO1B1",]
+ToDoList3 = ToDoList3[candidateGene == "SLCO1B3",]
 ToDoList3[,otherGWAS := "bilirubin"]
 
 ToDoList4 = copy(ToDoList)
@@ -59,11 +59,16 @@ ToDoList4 = ToDoList4[candidateGene == "NOS1",]
 ToDoList4[,otherGWAS := "sleep"]
 
 ToDoList5 = copy(ToDoList)
-ToDoList5 = ToDoList5[candidateGene == "PLB1",]
+ToDoList5 = ToDoList5[candidateGene == "FOSL2",]
 ToDoList5 = ToDoList5[c(1,1,1),]
 ToDoList5[,otherGWAS := c("SBP","PP","medication")]
 
-ToDoList = rbind(ToDoList,ToDoList2,ToDoList3,ToDoList4,ToDoList5)
+
+ToDoList6 = copy(ToDoList)
+ToDoList6 = ToDoList6[candidateGene == "KHDRBS2",]
+ToDoList6[,otherGWAS := c("chronotype")]
+
+ToDoList = rbind(ToDoList,ToDoList2,ToDoList3,ToDoList4,ToDoList5,ToDoList6)
 ToDoList
 
 #' # Load and filter data ####
@@ -104,7 +109,7 @@ ToDoList2 = copy(ToDoList)
 ToDoList2 = ToDoList2[otherGWAS=="lipids",]
 ToDoList2 = ToDoList2[!duplicated(candidateGene),]
 
-myLipids = list.files(path = paste0(path_lipids,".."),pattern = "with_N_1.gz",recursive = T)
+myLipids = list.files(path = paste0(path_lipids),pattern = "with_N_1.gz",recursive = T)
 myLipids = myLipids[!grepl("tbi",myLipids)]
 myLipids
 
@@ -116,7 +121,7 @@ dumTab2 = foreach(i = 1:length(myLipids))%do%{
 
   message("Working on lipid ",myLipid)
   
-  lipid = fread(paste0(path_lipids,"../",myLipids[i]))
+  lipid = fread(paste0(path_lipids,myLipids[i]))
   
   names(lipid)
   lipid = lipid[CHROM %in% ToDoList2$Chr,]
@@ -253,15 +258,38 @@ myBP[,MAF := EAF]
 myBP[EAF>0.5,MAF := 1-EAF]
 myBP[,pval := as.numeric(pval)]
 myBP[,SNP := paste(chr,bp_hg19,sep=":")]
-myBP[,candidateGene := "PLB1"]
+myBP[,candidateGene := "FOSL2"]
 
 myNames = c("SNP","chr","bp_hg19","EA","OA","EAF","MAF","beta","SE","pval","nSamples","candidateGene","phenotype")
 colsOut<-setdiff(colnames(myBP),myNames)
 myBP[,get("colsOut"):=NULL]
 setcolorder(myBP,myNames)
 
+#' ## Chronotype data ####
+myChrono = fread(paste0(path_otherGWAS,"morning_person_BOLT.output_HRC.only_plus.metrics_maf0.001_hwep1em12_info0.3_logORs.txt.gz"))
+myChrono = myChrono[CHR == ToDoList[otherGWAS=="chronotype",Chr]]
+myChrono = myChrono[BP <= ToDoList[otherGWAS=="chronotype",region_end]]
+myChrono = myChrono[BP >= ToDoList[otherGWAS=="chronotype",region_start]]
+myChrono[,phenotype := ToDoList[otherGWAS=="chronotype",otherGWAS]]
+myChrono[,candidateGene := ToDoList[otherGWAS=="chronotype",candidateGene]]
+myChrono[,nSamples := 403195 ]
+setnames(myChrono,"CHR","chr")
+setnames(myChrono,"BP","bp_hg19")
+setnames(myChrono,"ALLELE1","EA")
+setnames(myChrono,"ALLELE0","OA")
+setnames(myChrono,"A1FREQ","EAF")
+setnames(myChrono,"LOGOR","beta")
+setnames(myChrono,"LOGOR_SE","SE")
+setnames(myChrono,"P_BOLT_LMM","pval")
+myChrono[,MAF := EAF ]
+myChrono[EAF>0.5,MAF := 1-EAF ]
+myNames = c("SNP","chr","bp_hg19","EA","OA","EAF","MAF","beta","SE","pval","nSamples","candidateGene","phenotype")
+colsOut<-setdiff(colnames(myChrono),myNames)
+myChrono[,get("colsOut"):=NULL]
+setcolorder(myChrono,myNames)
+
 #' ## Save other GWAS data ####
-myOtherGWAS = rbind(myCAD,myLipids,mySleep,myBili,myBP)
+myOtherGWAS = rbind(myCAD,myLipids,mySleep,myBili,myBP,myChrono)
 save(myOtherGWAS, file="../temp/06_OtherGWASs.RData")
 load("../temp/06_OtherGWASs.RData")
 
@@ -272,7 +300,7 @@ myOtherGWAS[,ChrPos := paste(chr,bp_hg19,sep=":")]
 myOtherGWAS[,phenotype := gsub("MALE","MALES",phenotype)]
 
 dumTab1 = foreach(i=1:dim(ToDoList)[1])%do%{
-  #i=3
+  #i=32
   myRow = copy(ToDoList)
   myRow = myRow[i,]
   sex = unlist(strsplit(myRow$pheno,"_"))[2]

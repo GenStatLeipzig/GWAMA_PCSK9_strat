@@ -24,7 +24,7 @@
 rm(list = ls())
 time0<-Sys.time()
 
-source("../SourceFile_forostar.R")
+source("../SourceFile_angmar.R")
 .libPaths()
 setwd(paste0(projectpath_main,"/scripts/"))
 
@@ -90,7 +90,7 @@ load("../results/04_PearsonsCorrelation.RData")
 ToDoList = data.table(statistic = list.files(path = path_lipids,pattern = "_N_1.gz", recursive = TRUE))
 ToDoList = ToDoList[!grepl(".tbi",statistic)]
 
-ToDoList[,pheno := gsub("meta-analysis_AFR_EAS_EUR_HIS_SAS_","",statistic)]
+ToDoList[,pheno := gsub(".*_AFR_EAS_EUR_HIS_SAS_","",statistic)]
 ToDoList[,pheno := gsub("_with_N_1.gz","",pheno)]
 ToDoList[,pheno := gsub("_INV","",pheno)]
 ToDoList[,statistic_path := paste0(path_lipids,statistic)]
@@ -146,7 +146,33 @@ cor_TC = LDSC_PrepInputData_GLGC(path_data_trait1 = ToDoList$statistic_path[9],
                                         cortest_method = "pearson",
                                         path_ldsc_data = path_ldsc_data)
 
-cor_tabs_lipids = rbind(cor_HDL,cor_LDL,cor_logTG,cor_nonHDL,cor_TC,use.names=T,fill=TRUE)
+cor_LDL_TC = LDSC_PrepInputData_GLGC(path_data_trait1 = ToDoList$statistic_path[12],
+                                 path_data_trait2 = ToDoList$statistic_path[15],
+                                 out_dir = "../temp/04_LDSC/",
+                                 trait1_name = ToDoList$pheno[12],
+                                 trait2_name = ToDoList$pheno[15],
+                                 trait1_type = "cont",
+                                 trait2_type = "cont",
+                                 cortest_method = "pearson",
+                                 path_ldsc_data = path_ldsc_data)
+
+cor_HDL_nonHDL = LDSC_PrepInputData_GLGC(path_data_trait1 = ToDoList$statistic_path[11],
+                                     path_data_trait2 = ToDoList$statistic_path[14],
+                                     out_dir = "../temp/04_LDSC/",
+                                     trait1_name = ToDoList$pheno[11],
+                                     trait2_name = ToDoList$pheno[14],
+                                     trait1_type = "cont",
+                                     trait2_type = "cont",
+                                     cortest_method = "pearson",
+                                     path_ldsc_data = path_ldsc_data)
+
+cor_TG = LDSC_PrepInputData_GLGC(path_data_trait1 = ToDoList$statistic_path[13],
+                                         out_dir = "../temp/04_LDSC/",
+                                         trait1_name = ToDoList$pheno[13],
+                                         trait1_type = "cont",
+                                         path_ldsc_data = path_ldsc_data)
+
+cor_tabs_lipids = rbind(cor_HDL,cor_LDL,cor_logTG,cor_nonHDL,cor_TC,cor_LDL_TC,cor_HDL_nonHDL,cor_TG,use.names=T,fill=TRUE)
 cor_tabs_lipids
 cortabs = rbind(cor_tabs_PCSK9,cor_tabs_lipids,fill=TRUE)
 save(cortabs, file = "../results/04_PearsonsCorrelation.RData")
@@ -195,20 +221,16 @@ heritabCalls = gsub("w_hm3.snplist","",heritabCalls)
 #' 
 #' With lipids: GWAMA2 PCSK9 vs lipids (30 tests)
 #' 
-ToDoList2 = data.table(trait1 = c(ToDoList$outfn[11],ToDoList$outfn[12],
-                                  rep(ToDoList$outfn[11],5),
+ToDoList2 = data.table(trait1 = c(ToDoList$outfn[15],ToDoList$outfn[16],
                                   rep(ToDoList$outfn[15],5),
-                                  rep(ToDoList$outfn[12],5),
-                                  rep(ToDoList$outfn[12],5),
+                                  rep(ToDoList$outfn[19],5),
                                   rep(ToDoList$outfn[16],5),
-                                  rep(ToDoList$outfn[16],5)),
-                       trait2 = c(ToDoList$outfn[15],ToDoList$outfn[16],
-                                  ToDoList$outfn[c(1,3,5,7,17)],
-                                  ToDoList$outfn[c(2,4,6,8,18)],
-                                  ToDoList$outfn[c(1,3,5,7,17)],
-                                  ToDoList$outfn[c(2,4,6,8,18)],
-                                  ToDoList$outfn[c(1,3,5,7,17)],
-                                  ToDoList$outfn[c(2,4,6,8,18)]))
+                                  rep(ToDoList$outfn[20],5)),
+                       trait2 = c(ToDoList$outfn[19],ToDoList$outfn[20],
+                                  ToDoList$outfn[c(2,5,8,11,22)],
+                                  ToDoList$outfn[c(3,6,9,12,23)],
+                                  ToDoList$outfn[c(1,4,7,10,21)],
+                                  ToDoList$outfn[c(1,4,7,10,21)]))
 ToDoList2[,outfn_gencor := paste0(trait1,"_VS_",trait2)]
 ToDoList2[,outfn_gencor := gsub("LDSC_munge_","",outfn_gencor)]
 ToDoList2[,outfn_gencor := gsub("_GLGC","",outfn_gencor)]

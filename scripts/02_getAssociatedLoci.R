@@ -20,7 +20,7 @@
 rm(list = ls())
 time0<-Sys.time()
 
-source("../SourceFile_forostar.R")
+source("../SourceFile_angmar.R")
 .libPaths()
 setwd(paste0(projectpath_main,"/scripts/"))
 
@@ -266,6 +266,13 @@ result.4
 setorder(result.4,chr,bp_hg19)
 
 save(result.4,file="../results/02_LociOverallPhenotypes.RData")
+
+result.5 = copy(result.4)
+result.5 = result.5[NR_SNPs >1]
+result.5[,candidateGene := c("PCSK9","MYNC","APOB","FOSL2","KHDRBS2",
+                             "SASH1","PRKAG2","JMJD1C","SLCO1B3","NOS1",
+                             "gene desert","TM6SF2", "MACROD2")]
+save(result.5,file="../results/02_LociOverallPhenotypes_filtered.RData")
 
 #' # Session Info ####
 #' ***

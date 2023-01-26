@@ -24,7 +24,7 @@
 rm(list = ls())
 time0<-Sys.time()
 
-source("../SourceFile_forostar.R")
+source("../SourceFile_angmar.R")
 .libPaths()
 setwd(paste0(projectpath_main,"/scripts/"))
 
@@ -155,6 +155,7 @@ gencortab2 = gencortab2[grepl("PCSK9",trait2)]
 
 gencortab1[,lipid := gsub("_FEMALE","",trait2)]
 gencortab1[,lipid := gsub("_MALE","",lipid)]
+gencortab1[,lipid := gsub("_ALL","",lipid)]
 gencortab1[,sex := gsub(".*_","",trait2)]
 gencortab1[,category := gsub(".*_","",trait1)]
 gencortab1[category %in% c("females","males"),category := "combined"]
@@ -183,22 +184,21 @@ plotdata = data.table(myX = c(heritab1$statin,gencortab1$lipid),
                       myYmin = c(heritab1$lowerbound,gencortab1$lowerbound),
                       myYmax = c(heritab1$upperbound,gencortab1$upperbound),
                       myCategory = c(rep("heritab",8),gencortab1$category))
-plotdata[myCategory == "heritab", myCategory := "A) Heritability (only PCSK9)"]
-plotdata[myCategory == "combined", myCategory := "B) Genetic Correlation (combined)"]
-plotdata[myCategory == "free", myCategory := "C) Genetic Correlation (free)"]
-plotdata[myCategory == "treated", myCategory := "D) Genetic Correlation (treated)"]
+plotdata[myCategory == "heritab", myCategory2 := "A) Heritability (only PCSK9)"]
+plotdata[myCategory != "heritab", myCategory2 := "B) Genetic Correlation"]
 
 plotdata[myFill == "FEMALE",myFill :="females"]
 plotdata[myFill == "MALE",myFill :="males"]
-#plotdata[myFill == "females",myFill :="a -females"]
+plotdata[myFill == "ALL",myFill := myCategory]
 
+  
 p3<- ggplot(plotdata, aes(x=myX, y=myY, fill=myFill)) + 
-  facet_wrap(~myCategory,scales = "free_x") + 
+  facet_wrap(~myCategory2,scales = "free_x",ncol = 1) + 
   geom_bar(stat="identity", color="black", 
            position=position_dodge()) +
   geom_errorbar(aes(ymin=myYmin, ymax=myYmax), width=.2,
                 position=position_dodge(.9)) + 
-  scale_fill_manual(values=c("#82B446","#B2182B","#2166AC"))+
+  scale_fill_manual(values=c("#82B446","#B2182B","#DDA0DD","#2166AC","#7846B4"))+
   labs(x="",
        y = "Value",
        fill = "Sex") +
@@ -211,13 +211,13 @@ p3<- ggplot(plotdata, aes(x=myX, y=myY, fill=myFill)) +
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 12),
         legend.position = c(0.1, 0.85),
-        legend.background = element_rect(linewidth = 0.5, 
+        legend.background = element_rect(size = 0.5, 
                                          linetype="solid",
                                          colour ="black"))
 p3
 
 tiff(filename = "../figures/SupplementalFigure_LDSCresults.tiff", 
-     width = 3000, height = 2250, res=300, compression = 'lzw')
+     width = 2250, height = 2250, res=300, compression = 'lzw')
 p3
 dev.off()
 

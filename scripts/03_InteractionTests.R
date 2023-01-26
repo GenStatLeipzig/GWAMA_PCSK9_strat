@@ -24,7 +24,7 @@
 rm(list = ls())
 time0<-Sys.time()
 
-source("../SourceFile_forostar.R")
+source("../SourceFile_angmar.R")
 .libPaths()
 setwd(paste0(projectpath_main,"/scripts/"))
 
@@ -69,21 +69,16 @@ save(corTab, file = "../temp/03_CorrelationTable.RData")
 #' ***
 #' I only want to check the 13 loci that I used in the GCTA and Credible Set Analyses. 
 #' 
-load("../results/02_LociOverallPhenotypes.RData")
-result.4 = result.4[NR_SNPs >1]
+load("../results/02_LociOverallPhenotypes_filtered.RData")
 
 SNPs_sig = result.0[invalidAssocs  == F & pval<=1e-6,unique(markername)]
 result.1 = copy(result.0)
 result.1 = result.1[markername %in% SNPs_sig,]
+result.1 = result.1[chr %in% result.5$chr,]
 
-result.4[,candidateGene := c("PCSK9","new1","MYNC","APOB","PLB1","SASH1","PRKAG2","new2","SLCO1B1",
-                             "NOS1","gene desert","TM6SF2,SUGP2", "MACROD2,SNRPB2")]
-
-result.1 = result.1[chr %in% result.4$chr,]
-
-result.2 = foreach(i=1:dim(result.4)[1])%do%{
+result.2 = foreach(i=1:dim(result.5)[1])%do%{
   #i=1
-  myRow = result.4[i,]
+  myRow = result.5[i,]
   dummy = copy(result.1)
   dummy = dummy[chr == myRow$chr]
   dummy = dummy[bp_hg19 >= myRow$region_start]

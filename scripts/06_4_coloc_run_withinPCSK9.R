@@ -431,11 +431,11 @@ description = data.table(column = names(ColocTable),
                                         "Posterior probability for hypothesis 3: both trait associated, but different signals",
                                         "Posterior probability for hypothesis 4: both trait associated, shared signal"))
 
-save(ColocTable, description,file="../results/6_4_coloc_withinPCSK9.RData")
+save(ColocTable, description,file="../results/06_4_coloc_withinPCSK9.RData")
 
 tosave4 = data.table(data = c("ColocTable", "description"), 
                      SheetNames = c("ColocTable", "Description"))
-excel_fn = "../results/6_4_coloc_withinPCSK9.xlsx"
+excel_fn = "../results/06_4_coloc_withinPCSK9.xlsx"
 
 WriteXLS(tosave4$data, 
          ExcelFileName=excel_fn, 

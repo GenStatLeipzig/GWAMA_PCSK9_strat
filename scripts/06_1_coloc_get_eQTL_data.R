@@ -29,7 +29,7 @@
 rm(list = ls())
 time0 = Sys.time()
 
-source("../SourceFile_forostar.R")
+source("../SourceFile_angmar.R")
 
 setwd(paste0(projectpath_main,"scripts/"))
 
@@ -40,8 +40,8 @@ load("../results/05_GCTA_COJO.RData")
 myPhenos = unique(IndepSignals$pheno)
 mySNPs = unique(IndepSignals$SNP)
 
-genes = fread("../../2210_GWAMA/06_Annotation/results/synopsis/topliste_tabdelim/proximate_genes_2023-01-21_PCSK9_sex_strat_v2.txt")
-eQTLs = fread("../../2210_GWAMA/06_Annotation/results/synopsis/topliste_tabdelim/eqtlinfo_2023-01-21_PCSK9_sex_strat_v2.txt")
+genes = fread("../../2210_GWAMA/06_Annotation/results/synopsis/topliste_tabdelim/proximate_genes_2023-01-26_PCSK9_sex_strat_v2.txt")
+eQTLs = fread("../../2210_GWAMA/06_Annotation/results/synopsis/topliste_tabdelim/eqtlinfo_2023-01-26_PCSK9_sex_strat_v2.txt")
 
 genes = genes[markername %in% mySNPs,]
 eQTLs = eQTLs[snps %in% mySNPs,]
@@ -211,7 +211,7 @@ mySums = rowSums(myGenTab[,c(9:x),with=F], na.rm=TRUE)
 table(mySums == 0)
 myGenTab = myGenTab[mySums != 0,]
 
-save(myGenTab,file="../results/06_a_usedGenes.RData")
+save(myGenTab,file="../results/06_1_usedGenes.RData")
 
 #' # Sessioninfo ####
 #' ***

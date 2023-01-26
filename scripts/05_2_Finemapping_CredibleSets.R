@@ -20,7 +20,7 @@
 rm(list = ls())
 time0<-Sys.time()
 
-source("../SourceFile_forostar.R")
+source("../SourceFile_angmar.R")
 .libPaths()
 setwd(paste0(projectpath_main,"/scripts/"))
 
@@ -103,9 +103,11 @@ setnames(credSet,"SNP","snp")
 save(credSet, file="../results/05_CredSet.RData")
 
 credSet99 = copy(credSet)
+credSet99 = credSet99[candidateGene == "PCSK9",]
 credSet99 = credSet99[,c(1,17,8,9)] 
 
 credSet95 = copy(credSet)
+credSet95 = credSet95[candidateGene == "PCSK9",]
 credSet95 = credSet95[flag == T,] 
 credSet95 = credSet95[,c(1,17,8,9)] 
 

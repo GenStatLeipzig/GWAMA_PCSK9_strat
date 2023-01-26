@@ -27,7 +27,7 @@
 rm(list = ls())
 time0<-Sys.time()
 
-source("../SourceFile_forostar.R")
+source("../SourceFile_angmar.R")
 .libPaths()
 setwd(paste0(projectpath_main,"/scripts/"))
 
@@ -86,7 +86,7 @@ dumTab
 #' ***
 #' For the *PCSK9* locus on chromosome 1, I want to test each trait for independent signal (main locus). For the other loci, I only want to test those with 2 or more supportive variants with p<1e-6 and only the best setting. 
 #' 
-load("../results/02_LociOverallPhenotypes.RData")
+load("../results/02_LociOverallPhenotypes_filtered.RData")
 load("../results/02_LociPerPhenotype.RData")
 
 #' Prep *PCSK9* special treatment (females with statin treatment are not associated!)
@@ -97,12 +97,8 @@ result.3[, candidateGene := "PCSK9"]
 result.3[, region := as.character(region)]
 result.3[, region := paste("chr1::PCSK9")]
 
-result.4 = result.4[NR_SNPs >1]
-result.4 = result.4[markername != "rs11591147:55505647:G:T" ,]
-result.4[,candidateGene := c("MYNC","APOB","PLB1","KHDRBS2","SASH1","PRKAG2","JMJD1C","SLCO1B1",
-                             "NOS1","gene desert","TM6SF2", "MACROD2")]
-
-result.5 = rbind(result.3,result.4,fill=T)
+result.5 = result.5[markername != "rs11591147:55505647:G:T" ,]
+result.5 = rbind(result.3,result.5,fill=T)
 result.5[,input := paste0("../temp/05_GCTA_input/",phenotype,".ma")]
 result.5[,cutoff := 5e-8]
 result.5[pval>cutoff,cutoff := 1e-6]

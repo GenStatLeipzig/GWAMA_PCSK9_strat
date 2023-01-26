@@ -36,7 +36,7 @@ source("../helperFunctions/colocFunction_jp.R")
 
 #' # Prep data ####
 #' ***
-load("../results/06_a_usedGenes.RData")
+load("../results/06_1_usedGenes.RData")
 load("../results/05_GCTA_COJO.RData")
 
 #' # Run Coloc ####

@@ -35,7 +35,7 @@ ToDoList = copy(IndepSignals)
 ToDoList = ToDoList[multipleSignals == T,]
 ToDoList
 
-load("../results/06_a_usedGenes.RData")
+load("../results/06_1_usedGenes.RData")
 myGenTab = myGenTab[genename == "PCSK9"]
 filt = !is.na(myGenTab)
 myGenTab = myGenTab[,filt,with=F]
