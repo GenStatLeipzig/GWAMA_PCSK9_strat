@@ -41,6 +41,8 @@ You will need to customize a source file, indicating
  
 ## Scripts 
 
+R scripts staring with _0x_:
+
 1. Get summary statistics as uploaded to zenodo (**documentary**, uses GWAS pipeline output, you will not need to rerun this when you downloaded the zenodo data)
 2. Define associated loci 
 3. Interaction Tests
@@ -57,8 +59,41 @@ You will need to customize a source file, indicating
     1. Direction 1: PCSK9 on LDL-C
     2. Direction 2: LDL-C on PCSK9
     
-## Figures
+## Main Figures
+
+R scripts staring with _MF_:
 
 1. Interaction plot of 3-way interaction
 2. Heatmap of independent SNPs at _PCSK9_ gene loci
 3. Co-localization plot at _PCSK9_ gene loci (eQTLs + lipids + CAD)
+4. Co-localization plot at other associated loci with lipids
+
+## Main Tables
+
+R scripts staring with _MT_:
+
+1. Summary of PCSK9 variants
+2. Summary of other associated loci
+3. Bidirectional Mendelian Randomization
+
+## Supplemental Tables
+
+R script staring with _ST_:
+
+1. Description of Studies (as received from participating studies) **--> not included here**
+2. Sample Sizes, SNP Numbers, genomic inflation factor $\lambda$, and LDSC heritability results per phenotype
+3. Overview of independent loci
+4. Interaction analyses for associated SNPs
+5. Genetic correlation
+6. Step80: summary of all SNPs with at least p<1e-6 in one trait 
+   a. toploci
+   b. GWAS Catalog annotation
+   c. eQTL annotation
+   d. Gene annotation
+7. Step80: CS 99 annotation for PCSK9 locus only!
+8. Coloc results
+   a. males vs females and statin vs no statin (including cond stats for PCSK9 locus)
+   b. PCSK9 vs eQTLs (including cond stats for PCSK9 locus)
+   c. PCSK9 vs lipids / other traits
+9. MR: Bidirectional results of PCSK9 <--> LDLC (sex-strat) (allele scores?)
+
