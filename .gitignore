@@ -46,6 +46,7 @@ data/*
 helperScripts/*
 scripts/*.html
 scripts/*.out
+scripts/_archive/*
 results/*
 temp/*
 tables/*
