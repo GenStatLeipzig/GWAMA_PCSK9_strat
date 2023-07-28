@@ -65,7 +65,7 @@ Coloc_other_1 = Coloc_other_1[trait1 %in% IndepSignals$pheno[c(11,12)]]
 Coloc_other_PCSK9 = rbind(Coloc_other_1,Coloc_other_cond,fill=T)
 Coloc_other_PCSK9[,trait2 :=gsub("_.*","",trait2)]
 relotherGWAS = Coloc_other_PCSK9[PP.H4.abf>0.75,unique(trait2)]
-Coloc_other_PCSK9 = Coloc_other_PCSK9[trait2 %in% relotherGWAS[1:4],]
+Coloc_other_PCSK9 = Coloc_other_PCSK9[trait2 %in% relotherGWAS,]
 
 #' ## Get matrix format 
 eQTL_H4<-dcast(Coloc_eQTLs_PCSK9,
@@ -119,8 +119,10 @@ for (i in 1:x1){
 #' ## Get plot ####
 eQTL_H3$trait1
 #rownames(M) = eQTL_H3$trait1
-rownames(M)<-c("A: F - free","C: F - free","A: F - comb","C: F - comb","A: A - free","C: A - free",
-               "A: M - free","C: M - free","A: M - comb","C: M - comb","B: M - treated", "B: A - treated")
+rownames(M)<-c("rs11591147: F - free","rs693668: F - free","rs11591147: F - comb",
+               "rs693668: F - comb","rs11591147: A - free","rs693668 : A - free",
+               "rs11591147: M - free","rs693668 : M - free","rs11591147: M - comb",
+               "rs693668: M - comb","rs28385704: M - treated", "rs693668: A - treated")
 colnames(M)<-names(H3)[-1]
 names(H3)[-1]
 colnames(M)[1] = "Brain (CH)"
@@ -131,8 +133,8 @@ colnames(M)[9] = "Whole Blood"
 
 col_fun = colorRamp2(c(-1,0,1), c("coral","white","steelblue"))
 plot1 = Heatmap(M, name = "PP",col=col_fun, 
-              column_km = 3,row_km = 3,
-              row_title = c("", "", ""), column_title = c("","","")
+              column_km = 2,row_km = 2,
+              row_title = c("", ""), column_title = c("","")
               )
 plot1
 

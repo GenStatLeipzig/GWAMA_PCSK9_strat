@@ -99,9 +99,11 @@ colnames(plot.matrix) = phenotypes
 plot.matrix1 = t(plot.matrix)
 
 col_fun1 = colorRamp2(c(-0.34,0,0.07), c("coral","white","steelblue"))
+Heatmap(plot.matrix1, name = "beta",col=col_fun1)
 plot1 = Heatmap(plot.matrix1, name = "beta",col=col_fun1, 
-                column_km = 2,row_km = 3,
-                row_title = c("", "", ""), column_title = c("","")
+                clustering_distance_rows="euclidean", clustering_method_columns = "complete", 
+                column_km = 3,row_km = 2,
+                row_title = c("", ""), column_title = c("","","")
 )
 plot1
 
@@ -128,6 +130,27 @@ plot2 = Heatmap(plot.matrix2, name = "log(p)",col=col_fun2,
 )
 plot2
 
+plot.matr2.2 = copy(plot.matrix2)
+plot.matr2.2[plot.matr2.2<1.3]=0 
+plot.matr2.2[plot.matr2.2>1.3 & plot.matr2.2<6]=1 
+plot.matr2.2[plot.matr2.2>6 & plot.matr2.2<7.3]=2 
+plot.matr2.2[plot.matr2.2>7.3]=3 
+plot.matr2.2[4,1]=4
+plot.matr2.2[7,2]=4
+plot.matr2.2[4,3]=4
+plot.matr2.2[4,4]=4
+
+col_fun2.2 = colorRamp2(c(0,1,2, 3,4), c("white","yellow", "orange", "red","darkred"))
+Heatmap(plot.matr2.2, name = "log(p)",col=col_fun2.2) 
+plot2.2 = Heatmap(plot.matr2.2, col=col_fun2.2, 
+                column_km = 3,row_km = 2,
+                row_title = c("", ""), column_title = c("","",""),
+                show_heatmap_legend = F#,
+                # show_row_dend = F,
+                # show_column_dend = F
+)
+plot2.2
+
 #' of unconditional Zscores
 data_GWAS[,Zscore := beta/SE]
 plotData3<-dcast(data_GWAS,
@@ -145,12 +168,14 @@ colnames(plot.matrix) = phenotypes
 plot.matrix3 = t(plot.matrix)
 
 col_fun3 = colorRamp2(c(-15,0,15), c("coral","white","steelblue"))
+Heatmap(plot.matrix3, name = "Zscore",col=col_fun3)
 plot3 = Heatmap(plot.matrix3, name = "Zscore",col=col_fun3, 
-                column_km = 2,row_km = 3,
-                row_title = c("", "", ""), column_title = c("","")
+                column_km = 3,row_km = 2,
+                row_title = c("", ""), column_title = c("","","")
 )
 plot3
 
+#' 
 #' # Save plot ####
 #' ***
 tiff(filename = "../figures/MainFigure2_Heatmap_logp.tiff",
@@ -158,6 +183,15 @@ tiff(filename = "../figures/MainFigure2_Heatmap_logp.tiff",
 plot2
 dev.off()
 
+tiff(filename = "../figures/MainFigure2_Heatmap_betas_230326.tiff",
+     width = 1650, height = 1350, res=250, compression = 'lzw')
+plot1
+dev.off()
+
+tiff(filename = "../figures/MainFigure2_Heatmap_logp_230326.tiff",
+     width = 1650, height = 1350, res=250, compression = 'lzw')
+plot2.2
+dev.off()
 
 #' # Sessioninfo ####
 #' ***

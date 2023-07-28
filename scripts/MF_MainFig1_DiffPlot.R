@@ -124,6 +124,8 @@ plotdata[,type3 := "males vs females"]
 plotdata[type =="statinIA",type3 := "treated vs free"]
 plotdata[,gene2 := ""]
 plotdata[IA_hierarch_fdr5proz==T & markername %in% IndepSignals$SNP,gene2 := candidateGene]
+plotdata[gene2 == "gene desert",gene2 := "18q23"]
+
 
 myPlot2 = ggplot(plotdata, aes(x=trait1_beta, y=trait2_beta, color=gene,size = gene,label=gene2)) +
   facet_wrap(~type3)+
@@ -134,7 +136,7 @@ myPlot2 = ggplot(plotdata, aes(x=trait1_beta, y=trait2_beta, color=gene,size = g
   theme_bw(base_size = 10) + 
   scale_size_manual(values=c(2,rep(3.5,7)))+
   scale_colour_manual(values=c("#000000","#1B9E77","#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D"),
-                      labels=c("no \ninteraction","FOSL2","gene desert","KHDRBS2","MACROD2","PRKAG2",
+                      labels=c("no \ninteraction","FOSL2","18q23","KHDRBS2","MACROD2","PRKAG2",
                                "SASH1","SLCO1B3"))+
   guides(size="none",color="none")+
   theme(plot.title = element_text(hjust = 0, size=22,face="bold"),
@@ -144,8 +146,8 @@ myPlot2 = ggplot(plotdata, aes(x=trait1_beta, y=trait2_beta, color=gene,size = g
         strip.text.x = element_text(size = 14),
         legend.title = element_text(size = 12),
         legend.text = element_text(size = 10))+
-  labs(x="effect in trait 1", 
-       y = "effect in trait 2")+
+  labs(x="effect in group 'males' or 'treated'", 
+       y = "effect in group 'females' or 'free'")+
   geom_text_repel(box.padding = 0.5, max.overlaps = Inf)
 
 myPlot2
