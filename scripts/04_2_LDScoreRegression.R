@@ -193,7 +193,7 @@ plotdata[myFill == "ALL",myFill := myCategory]
 
   
 p3<- ggplot(plotdata, aes(x=myX, y=myY, fill=myFill)) + 
-  facet_wrap(~myCategory2,scales = "free_x",ncol = 1) + 
+  facet_wrap(~myCategory2,scales = "free",ncol = 1) + 
   geom_bar(stat="identity", color="black", 
            position=position_dodge()) +
   geom_errorbar(aes(ymin=myYmin, ymax=myYmax), width=.2,
@@ -201,7 +201,7 @@ p3<- ggplot(plotdata, aes(x=myX, y=myY, fill=myFill)) +
   scale_fill_manual(values=c("#82B446","#B2182B","#DDA0DD","#2166AC","#7846B4"))+
   labs(x="",
        y = "Value",
-       fill = "Sex") +
+       fill = "Strata") +
   theme_bw(base_size = 10) + 
   theme(plot.title = element_text(hjust = 0, size=22,face="bold"),
         axis.title.x = element_text(size=14,face="bold"),
@@ -210,7 +210,7 @@ p3<- ggplot(plotdata, aes(x=myX, y=myY, fill=myFill)) +
         strip.text.x = element_text(size = 12,face="bold"),
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 12),
-        legend.position = c(0.1, 0.85),
+        #legend.position = c(0.1, 0.85),
         legend.background = element_rect(size = 0.5, 
                                          linetype="solid",
                                          colour ="black"))

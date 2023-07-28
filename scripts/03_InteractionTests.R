@@ -42,7 +42,7 @@ ToDoList[,statistic := list.files(path = "../data/",pattern = "PCSK9")]
 ToDoList[,statistic_path := paste0("../data/",statistic)]
 
 ToDoList[,pheno := gsub("SumStat_","",statistic)]
-ToDoList[,pheno := gsub("_230120.txt.gz","",pheno)]
+ToDoList[,pheno := gsub("_23.*","",pheno)]
 
 dumTab = foreach(i = 1:dim(ToDoList)[1])%do%{
   #i=1
@@ -67,14 +67,13 @@ save(corTab, file = "../temp/03_CorrelationTable.RData")
 
 #' # Filter data ####
 #' ***
-#' I only want to check the 13 loci that I used in the GCTA and Credible Set Analyses. 
+#' I only want to check the 11 loci that have more than associated 2 SNPs (pval<1e-6). 
 #' 
 load("../results/02_LociOverallPhenotypes_filtered.RData")
 
 SNPs_sig = result.0[invalidAssocs  == F & pval<=1e-6,unique(markername)]
 result.1 = copy(result.0)
 result.1 = result.1[markername %in% SNPs_sig,]
-result.1 = result.1[chr %in% result.5$chr,]
 
 result.2 = foreach(i=1:dim(result.5)[1])%do%{
   #i=1
@@ -89,7 +88,6 @@ result.2 = foreach(i=1:dim(result.5)[1])%do%{
   dummy
 }
 result.2 = rbindlist(result.2)
-result.1[markername %nin% result.2$markername,]
 table(result.2$phenotype,result.2$chr)
 setorder(result.2,chr,bp_hg19)
 
@@ -97,33 +95,42 @@ setorder(result.2,chr,bp_hg19)
 #' ***
 #' 
 result.2[,table(phenotype,bestPheno)]
+dummy = copy(result.2)
+setorder(dummy,pval)
+dummy = dummy[!is.na(pval),]
+dummy = dummy[!duplicated(markername),]
+matched = match(result.2$markername,dummy$markername)
+result.2[,bestPheno2 := dummy[matched,phenotype]]
+result.2[,table(bestPheno, bestPheno2)]
+
 result.2[, bestSex := "combined"]
-result.2[grepl("_male",bestPheno), bestSex := "males"]
-result.2[grepl("_female",bestPheno), bestSex := "females"]
-result.2[,table(bestPheno,bestSex)]
+result.2[grepl("_male",bestPheno2), bestSex := "males"]
+result.2[grepl("_female",bestPheno2), bestSex := "females"]
+result.2[,table(bestPheno2,bestSex)]
 
 result.2[, bestStatin := "combined"]
-result.2[grepl("_free",bestPheno), bestStatin := "free"]
-result.2[grepl("_treated",bestPheno), bestStatin := "treated"]
-result.2[,table(bestPheno,bestStatin)]
+result.2[grepl("_free",bestPheno2), bestStatin := "free"]
+result.2[grepl("_treated",bestPheno2), bestStatin := "treated"]
+result.2[,table(bestPheno2,bestStatin)]
 
 result.2[, sex := "combined"]
 result.2[grepl("_male",phenotype), sex := "males"]
 result.2[grepl("_female",phenotype), sex := "females"]
-result.2[,table(bestPheno,sex)]
+result.2[,table(bestPheno2,sex)]
 
 result.2[, statin := "combined"]
 result.2[grepl("_free",phenotype), statin := "free"]
 result.2[grepl("_treated",phenotype), statin := "treated"]
-result.2[,table(bestPheno,statin)]
+result.2[,table(bestPheno2,statin)]
 
-result.2[,corSex := corTab[1,correlation]]
-result.2[bestStatin == "free",corSex := corTab[2,correlation]]
-result.2[bestStatin == "treated",corSex := corTab[3,correlation]]
-result.2[,corStatin := corTab[4,correlation]]
-result.2[bestSex == "males",corStatin := corTab[5,correlation]]
-result.2[bestSex == "females",corStatin := corTab[6,correlation]]
-
+# result.2[,corSex := corTab[1,correlation]]
+# result.2[bestStatin == "free",corSex := corTab[2,correlation]]
+# result.2[bestStatin == "treated",corSex := corTab[3,correlation]]
+# result.2[,corStatin := corTab[4,correlation]]
+# result.2[bestSex == "males",corStatin := corTab[5,correlation]]
+# result.2[bestSex == "females",corStatin := corTab[6,correlation]]
+result.2[,corSex := 0]
+result.2[,corStatin := 0]
 
 #' # Check EAFs ####
 #' ***
@@ -168,14 +175,18 @@ IATab_3way[,type2 := "unspecific"]
 IATab_3way[IA_pval<0.05,type2 := "nom. sig. interaction"]
 IATab_3way[IA_hierarch_fdr5proz==T,type2 := "interaction"]
 
+result.6 = IATab_3way[markername %in% result.5$markername,c(1,30:36)]
+result.6[,IA_pval_adj2 := p.adjust(p=IA_pval,method = "fdr")]
+result.6
+
 #' **Summary** 3-way interaction:
 #' 
-#' - **PCSK9**: 12 SNPs with nominal significant interactions 
-#'    - 8 at the beginning of the locus: gw sig for **treated males**, nom sig for free males and females, not sig for treated females
-#'    - 4 at the end of the locus: sug sig for **free females**, nom sig for treated males, not sig for treated females and free males
-#' - **MYNC**: 1 SNP with nominal significant interaction (sug sig in **free males**, not sig in the three other traits)
-#' - **SLCO1B1**: 214 SNPs with nominal significant interaction (sug sig in **free females**, not sig in the other three traits)
-#' - **SASH1**: 6 SNPs with significant interaction (sug sig in **treated females**, not sig in the other three traits)
+#' - **ALOX5**: significant 3-way interaction in 38 SNPs, including the lead SNP
+#'    - no association in statin-free females
+#'    - no association in statin-treated females
+#'    - no association in statin-treated males
+#'    - significant association in statin-free males
+#' - using lead SNPs only does not change the result
 #'      
 
 save(IATab_3way,file = "../results/03_InteractionTests_3way.RData")
@@ -210,24 +221,27 @@ IATab_2way_sex[,table(IA_pval<0.05,candidateGene)]
 IATab_2way_sex[,type2 := "unspecific"]
 IATab_2way_sex[IA_hierarch_fdr5proz==T,type2 := "sex-interaction"]
 
+result.7 = IATab_2way_sex[markername %in% result.5$markername,c(1,24:27,7,28:29)]
+result.7[,IA_pval_adj2 := p.adjust(p=IA_pval,method = "fdr")]
+result.7
+
 IATab_2way_sex[IA_hierarch_fdr5proz==T,.N,candidateGene]
 
 #' **Summary** 2-way sex interaction:
 #' 
-#' - **MYNC**: male-specific association
-#' - **PLB1**: female-specific association
-#' - **SASH1**: female-specific association
 #' - **PRKAG2**: male-specific association
+#' - **ALOX5**: male-specific association
 #' - **SLCO1B1**: female-specfic association
-#' - **gene desert**: male-specific association
-#' - **MACROD2,SNRPB2**: female-specfic association
-#' 
+#' - **NOS1**: male-specific association
+#' - **PCSK9**: 34 mixed interactions (consistent effect direction)
+#'    - 9 SNPs with genome-wide significance in both, but weaker effects in females
+#'    - 9 SNPs with significant effect in males, but no effect in females
+#'    - 16 SNPs with significant effect in males, but only nominal effect in females
 
-IATab_2way_sex[IA_hierarch_fdr5proz==T & candidateGene %in% c("MYNC","PRKAG2","gene desert"),type2 := "male-specific"]
-IATab_2way_sex[IA_hierarch_fdr5proz==T & candidateGene %in% c("PLB1","SASH1","SLCO1B1","MACROD2,SNRPB2"),type2 := "female-specific"]
+IATab_2way_sex[IA_hierarch_fdr5proz==T & candidateGene %in% c("PRKAG2","ALOX5","NOS1"),type2 := "male-specific"]
+IATab_2way_sex[IA_hierarch_fdr5proz==T & candidateGene %in% c("SLCO1B3"),type2 := "female-specific"]
 table(IATab_2way_sex$type2)
 save(IATab_2way_sex,file="../temp/03_IATest_output_2way_sex.RData")
-
 
 #' ## Run Test for statin ####
 IATab_2way_statin = TwoWayInteractionTest_jp(data = result.2,
@@ -255,19 +269,26 @@ IATab_2way_statin[,table(IA_pval<0.05,candidateGene)]
 IATab_2way_statin[,type2 := "unspecific"]
 IATab_2way_statin[IA_hierarch_fdr5proz==T,type2 := "interaction"]
 
+result.8 = IATab_2way_statin[markername %in% result.5$markername,c(1,24:27,7,28:29)]
+result.8[,IA_pval_adj2 := p.adjust(p=IA_pval,method = "fdr")]
+result.8
+
 IATab_2way_statin[IA_hierarch_fdr5proz==T,.N,candidateGene]
 
 #' **Summary** 2-way statin interaction:
 #' 
-#' - **PCSK9**: treatment-related association
-#' - **new1**: free-specific association
-#' - **SASH1**: treatment-specific association
-#' - **PRKAG2**: free-specific association
-#' - **gene desert**: treatment-specific association
+#' Here it makes a difference if you use all SNPs or just the lead SNPs!
 #' 
-IATab_2way_statin[IA_hierarch_fdr5proz==T & candidateGene %in% c("new1","PRKAG2"),type2 := "free-specific"]
-IATab_2way_statin[IA_hierarch_fdr5proz==T & candidateGene %in% c("SASH1","gene desert"),type2 := "treated-specific"]
-IATab_2way_statin[IA_hierarch_fdr5proz==T & candidateGene %in% c("PCSK9"),type2 := "treated-related"]
+#' - **KHDRBS2**: 7 significant interactions, lead SNP has only effect in statin-treated individuals
+#' - **PRKAG2**: 4 significant interactions, lead SNP has only effect in statin-free males
+#' - **ALOX5**: 60 significant interactions, lead SNP has only effect in statin-free males
+#' - **PCSK9**: 28 nominal significant interactions, lead SNP has stronger effect in statin-free individuals
+#' - **APOB**: 109 nominal significant interactions, lead SNP has only effect in statin-free individuals
+#' - **JMJD1C**: 108 nominal significant interactions, lead SNP has only effect in statin-free individuals
+#' - **TM6SF2**: 20 nominal significant interactions, lead SNP has only effect in statin-free individuals
+#' 
+IATab_2way_statin[IA_hierarch_fdr5proz==T & candidateGene %in% c("ALOX5","PRKAG2"),type2 := "free-specific"]
+IATab_2way_statin[IA_hierarch_fdr5proz==T & candidateGene %in% c("KHDRBS2"),type2 := "treated-specific"]
 
 table(IATab_2way_statin$type2)
 
@@ -276,10 +297,7 @@ save(IATab_2way_statin,file="../temp/03_IATest_output_2way_statin.RData")
 #' ## Summary ####
 #' ***
 #' 
-#' * no interaction whatsoever: APOB, TM6SF2, NOS1
-#' * only sex interaction: PLB1, MYNC, MACROD2, SLCO1B1
-#' * sex and statin interaction: CYP51A1P3, PRKAG2, gene desert
-#' * sometimes interaction: PCSK9
+#' RERUN THIS WHEN YOU HAVE THE INDEPENDENT VARIANTS FROM GCTA - MAYBE THEN EASIER?
 #' 
 IATab_2way = rbind(IATab_2way_sex,IATab_2way_statin)
 save(IATab_2way,file = "../results/03_InteractionTests_2way.RData")

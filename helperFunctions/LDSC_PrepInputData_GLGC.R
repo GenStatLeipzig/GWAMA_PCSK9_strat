@@ -229,6 +229,7 @@ LDSC_PrepInputData_GLGC = function(path_data_trait1,
   }else{n2_3 = 0}
   
   # Step 9: save
+  if(dir.exists(out_dir)==F) dir.create(out_dir) 
   out_fn1 = paste0(out_dir, "LDSC_input_",trait1_name,".txt")
   erg1_p1[,Pvalue := as.numeric(Pvalue)]
   message("Saving SNP data to ",out_fn1)

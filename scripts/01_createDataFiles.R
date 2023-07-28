@@ -20,7 +20,7 @@
 rm(list = ls())
 time0<-Sys.time()
 
-source("../SourceFile_forostar.R")
+source("../SourceFile_angmar.R")
 .libPaths()
 setwd(paste0(projectpath_main,"/scripts/"))
 
@@ -28,8 +28,8 @@ setwd(paste0(projectpath_main,"/scripts/"))
 #' ***
 ToDoList = data.table(NR = 1:8)
 
-ToDoList[,statistic := list.files(path = "../../2210_GWAMA/06_Annotation/results/",pattern = "step10")]
-ToDoList[,statistic_path := paste0("../../2210_GWAMA/06_Annotation/results/",statistic)]
+ToDoList[,statistic := list.files(path = "../../2307_GWAMA/06_Annotation2/results/",pattern = "step10")]
+ToDoList[,statistic_path := paste0("../../2307_GWAMA/06_Annotation2/results/",statistic)]
 
 ToDoList[,pheno := gsub("step10_2_primaryANDsecondary_","",statistic)]
 ToDoList[,pheno := gsub(".RData","",pheno)]
@@ -84,7 +84,10 @@ dumTab<-foreach(i=1:dim(ToDoList)[1]) %do% {
   head(erg2)
   
   # save
-  outFile = paste0("../data/SumStat_", pheno,"_230120.txt")
+  tag = format(Sys.time(), "%Y-%m-%d")
+  tag2 = gsub("2023-","23-",tag)
+  tag2 = gsub("-","",tag2)
+  outFile = paste0("../data/SumStat_", pheno,"_",tag2,".txt")
   fwrite(erg2, file = outFile, quote = F, sep = "\t", col.names = T, row.names = F, na = NA, dec = ".")
   gzip(outFile,destname = paste0(outFile, ".gz"))
   message("                 ",pheno," - finished saving")
@@ -100,7 +103,7 @@ dumTab<-foreach(i=1:dim(ToDoList)[1]) %do% {
   
 }
 todo2<-rbindlist(dumTab)
-todo2[,c(3,7:10)]
+todo2[,c(1,4,8:11)]
 
 #' # Session Info ####
 #' ***

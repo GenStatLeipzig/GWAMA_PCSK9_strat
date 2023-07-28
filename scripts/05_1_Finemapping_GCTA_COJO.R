@@ -39,7 +39,7 @@ ToDoList[,statistic := list.files(path = "../data/",pattern = "PCSK9")]
 ToDoList[,statistic_path := paste0("../data/",statistic)]
 
 ToDoList[,pheno := gsub("SumStat_","",statistic)]
-ToDoList[,pheno := gsub("_230120.txt.gz","",pheno)]
+ToDoList[,pheno := gsub("_23.*","",pheno)]
 
 dumTab = foreach(i = 1:dim(ToDoList)[1])%do%{
   #i=1
@@ -89,32 +89,28 @@ dumTab
 load("../results/02_LociOverallPhenotypes_filtered.RData")
 load("../results/02_LociPerPhenotype.RData")
 
-#' Prep *PCSK9* special treatment (females with statin treatment are not associated!)
-#' 
-result.3 = result.3[chr==1,]
-result.3 = result.3[region_start <69262830  ,]
-result.3[, candidateGene := "PCSK9"]
-result.3[, region := as.character(region)]
-result.3[, region := paste("chr1::PCSK9")]
+result.3 = result.3[markername %in% result.5$markername,]
+matched = match(result.3$markername,result.5$markername)
+result.3[,candidateGene := result.5[matched,candidateGene]]
+result.3[,region := result.5[matched,region]]
+result.3[,input := paste0("../temp/05_GCTA_input/",phenotype,".ma")]
+result.3[,cutoff := 5e-8]
+result.3[pval>cutoff,cutoff := 1e-6]
+result.3[candidateGene == "KHDRBS2",cutoff := 1e-6]
+result.3[candidateGene == "KHDRBS2",markername := "rs112875382:62600689:G:GT"]
+result.3[candidateGene == "SLCO1B3",markername := "rs4762806:21067768:T:C"]
+result.3 = result.3[-17,]
 
-result.5 = result.5[markername != "rs11591147:55505647:G:T" ,]
-result.5 = rbind(result.3,result.5,fill=T)
-result.5[,input := paste0("../temp/05_GCTA_input/",phenotype,".ma")]
-result.5[,cutoff := 5e-8]
-result.5[pval>cutoff,cutoff := 1e-6]
-result.5[candidateGene == "KHDRBS2",cutoff := 1e-6]
-result.5[candidateGene == "KHDRBS2",markername := "rs73487385:62616515:T:G"]
-
-SLCTtab<-foreach(i = 1:dim(result.5)[1])%do%{
-  #i=11
-  myRow = result.5[i,]
+SLCTtab<-foreach(i = 1:dim(result.3)[1])%do%{
+  #i=1
+  myRow = result.3[i,]
   myPheno<-myRow[1,phenotype]
   mySNP<-myRow[1,markername]
   myChr<-myRow[1,chr]
   myNR<-myRow[1,region]
   myInput<-myRow[1,input]
   myCut<-myRow[1,cutoff]
-  myOutput = paste(myRow[1,region],myRow[1,phenotype],sep="::")
+  myOutput = paste(i,myRow[1,candidateGene],myRow[1,phenotype],sep="_")
   if(dir.exists("../results/05_GCTA_COJO_slct/")==F) dir.create("../results/05_GCTA_COJO_slct/") 
   
   mycall<-paste0(path_gcta,
@@ -146,8 +142,8 @@ SLCTtab<-foreach(i = 1:dim(result.5)[1])%do%{
 }
 SLCTtab<-rbindlist(SLCTtab)
 table(SLCTtab$SNP == SLCTtab$TopSNP)
-SLCTtab[grepl("chr1::PCSK9",input_slct)]
-SLCTtab[!grepl("chr1::PCSK9",input_slct)]
+SLCTtab[grepl("PCSK9",candidateGene)]
+SLCTtab[!grepl("PCSK9",candidateGene)]
 SLCTtab[,rsID := gsub(":.*","",SNP)]
 
 

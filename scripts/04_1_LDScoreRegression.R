@@ -31,14 +31,12 @@ setwd(paste0(projectpath_main,"/scripts/"))
 source("../helperFunctions/LDSC_PrepInputData_PCSK9.R")
 source("../helperFunctions/LDSC_PrepInputData_GLGC.R")
 
-
 #' # Step 1: Munge PCSK9 data  ####
 #' ***
 ToDoList = data.table(statistic = list.files(path = "../data/",pattern = "txt.gz"))
 ToDoList[,statistic_path := paste0("../data/",statistic)]
 ToDoList[,pheno := gsub("SumStat_","",statistic)]
-ToDoList[,pheno := gsub("_230120.txt.gz","",pheno)]
-ToDoList
+ToDoList[,pheno := gsub("_23.*","",pheno)]
 
 cor_comb1 = LDSC_PrepInputData_PCSK9(path_data_trait1 = ToDoList$statistic_path[1],
                                        path_data_trait2 = ToDoList$statistic_path[5],
@@ -94,7 +92,6 @@ ToDoList[,pheno := gsub(".*_AFR_EAS_EUR_HIS_SAS_","",statistic)]
 ToDoList[,pheno := gsub("_with_N_1.gz","",pheno)]
 ToDoList[,pheno := gsub("_INV","",pheno)]
 ToDoList[,statistic_path := paste0(path_lipids,statistic)]
-ToDoList
 
 cor_HDL = LDSC_PrepInputData_GLGC(path_data_trait1 = ToDoList$statistic_path[1],
                                       path_data_trait2 = ToDoList$statistic_path[2],

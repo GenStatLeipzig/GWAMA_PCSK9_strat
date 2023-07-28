@@ -2,7 +2,7 @@
 
 **Contributor: Janne Pott**
 
-**Last Updated: 29/01/2023**
+**Last Updated: 28/07/2023**
 
 Supporting code for the following paper:
 
@@ -13,7 +13,7 @@ This project is an extension to our previous publications:
 * Pott J, Burkhardt R, Beutner F, Horn K, Teren A, Kirsten H, et al. Genome-wide meta-analysis identifies novel loci of plaque burden in carotid artery. _Atherosclerosis_. 2017;259:32–40. [DOI](https://doi.org/10.1016/j.atherosclerosis.2017.02.018).
 * Pott J, Gadin J, Theusch E, Kleber ME, Delgado GE, Kirsten H, et al. Meta-GWAS of PCSK9 levels detects two novel loci at APOB and TM6SF2. _Hum Mol Genet_ 2021. [DOI](https://doi.org/10.1093/hmg/ddab279).
 
-We are providing the main scripts used in the GWAMA of PCSK9 levels in four European Cohorts (LIFE-Adult, LIFE-Heart, LURIC, and TwinGene), stratified by sex and statin treatment, to empower other researchers to reproduce our results, starting from the summary statistics. Data can be found on zenodo (LINK tba)
+We are providing the main scripts used in the GWAMA of PCSK9 levels in four European Cohorts (LIFE-Adult, LIFE-Heart, LURIC, TwinGene, KORA-F3, and GCKD), stratified by sex and statin treatment, to empower other researchers to reproduce our results, starting from the summary statistics. Data can be found on zenodo (LINK tba)
 
 ## Source File
 
@@ -45,16 +45,16 @@ R scripts staring with _0x_:
 
 1. Get summary statistics as uploaded to zenodo (**documentary**, uses GWAS pipeline output, you will not need to rerun this when you downloaded the zenodo data)
 2. Define associated loci 
-3. Interaction Tests
-4. LD Score regression
-5. Fine-mapping
+3. Fine-mapping
     1. GCTA conditional joint analyses
     2. Credible Sets
-6. Co-localization
+4. Interaction Tests
+5. Co-localization
     1. Preparation of data
     2. Run within PCSK9 data
     3. Run against eQTLs
     4. Run against other GWAS traits
+6. LD Score regression
 7. Mendelian Randomization
     1. Direction 1: PCSK9 on LDL-C
     2. Direction 2: LDL-C on PCSK9

@@ -35,7 +35,7 @@ ToDoList[,statistic := list.files(path = "../data/",pattern = "PCSK9")]
 ToDoList[,statistic_path := paste0("../data/",statistic)]
 
 ToDoList[,pheno := gsub("SumStat_","",statistic)]
-ToDoList[,pheno := gsub("_230120.txt.gz","",pheno)]
+ToDoList[,pheno := gsub("_23.*","",pheno)]
 
 dumTab = foreach(i = 1:dim(ToDoList)[1])%do%{
   #i=1
@@ -250,11 +250,11 @@ result.4[,.N,by=phenotype]
 table(result.4$chr)
 result.4
 
-#' There is a total of 21 loci associated with at least one SNP. But I want to loci to be supported by at least two other variants!
+#' There is a total of 29 loci associated with at least one SNP. But I want to loci to be supported by at least two other variants!
 #' 
 result.4[NR_SNPs>1,]
 #' 
-#' There is a total of 13 loci associated with sufficient support. 
+#' There is a total of 11 loci associated with sufficient support. 
 #' 
 
 names(result.4)
@@ -269,9 +269,9 @@ save(result.4,file="../results/02_LociOverallPhenotypes.RData")
 
 result.5 = copy(result.4)
 result.5 = result.5[NR_SNPs >1]
-result.5[,candidateGene := c("PCSK9","MYNC","APOB","FOSL2","KHDRBS2",
-                             "SASH1","PRKAG2","JMJD1C","SLCO1B3","NOS1",
-                             "gene desert","TM6SF2", "MACROD2")]
+result.5[,candidateGene := c("PCSK9","APOB","KHDRBS2",
+                             "PRKAG2","ALOX5","JMJD1C","FADS1","SLCO1B3","NOS1",
+                             "HP","TM6SF2")]
 save(result.5,file="../results/02_LociOverallPhenotypes_filtered.RData")
 
 #' # Session Info ####
