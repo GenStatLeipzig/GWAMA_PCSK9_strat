@@ -36,8 +36,19 @@ source("../helperFunctions/colocFunction_jp.R")
 
 #' # Prep data ####
 #' ***
-load("../results/06_1_usedGenes.RData")
-load("../results/05_GCTA_COJO.RData")
+load("../results/05_1_usedGenes.RData")
+load("../results/03_GCTA_COJO.RData")
+table(is.element(IndepSignals$candidateGene,myGenTab$genename))
+matched = match(IndepSignals$candidateGene,myGenTab$genename)
+IndepSignals[,cytoband := myGenTab[matched,cytoband]]
+
+ToDoList = data.table(NR = 1:8)
+
+ToDoList[,statistic := list.files(path = "../data/",pattern = "PCSK9")]
+ToDoList[,statistic_path := paste0("../data/",statistic)]
+
+ToDoList[,pheno := gsub("SumStat_","",statistic)]
+ToDoList[,pheno := gsub("_23.*","",pheno)]
 
 #' # Run Coloc ####
 #' ***
@@ -48,16 +59,14 @@ load("../results/05_GCTA_COJO.RData")
 #' Loop 3: Genes (all available gene per tissue, independent of top phenotype)
 #' 
 
-myPhenos = unique(IndepSignals$pheno)
-
 registerDoMC(cores=20)
 
-dumTab = foreach(k=1:length(myPhenos))%do%{
+dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
   #k=1
-  myPheno = myPhenos[k]
+  myPheno = ToDoList[k,pheno]
   # myPheno2 = gsub(myPheno,pattern="\\_.*",replacement = "")
   message("Working on phenotype ",myPheno)
-  myFileName = paste0("../data/SumStat_",myPheno,"_230120.txt.gz")
+  myFileName = ToDoList[k,statistic_path]
   
   data_GWAS = fread(myFileName)
   data_GWAS = data_GWAS[invalidAssocs==F,]
@@ -70,15 +79,19 @@ dumTab = foreach(k=1:length(myPhenos))%do%{
   data_GWAS[,maf := EAF]
   data_GWAS[EAF>0.5,maf := 1-EAF]
   
-  myeQTLs2<-dir(path = "../temp/06_coloc/",pattern = ".RData")
+  # relevant loci
+  uniqueCytos = IndepSignals[pheno == myPheno, unique(cytoband)]
+  
+  myeQTLs2<-dir(path = "../temp/05_coloc/",pattern = ".RData")
   
   dumTab2 = foreach(i=c(1:length(myeQTLs2)))%dopar%{
     #i=1
-    loaded = load(paste0("../temp/06_coloc/",myeQTLs2[i]))
+    loaded = load(paste0("../temp/05_coloc/",myeQTLs2[i]))
     data_eQTLs = get(loaded)
     myTissue2 = gsub("GTEx_v8_filtered_","",myeQTLs2[i])
     myTissue2 = gsub(".RData","",myTissue2)
     message("Working on tissue ",myTissue2)
+    data_eQTLs = data_eQTLs[cyto %in% uniqueCytos,]
     
     # get To Do list
     dummy = data_eQTLs[,.N,by=gene]
@@ -158,11 +171,11 @@ description = data.table(column = names(ColocTable),
                                         "Posterior probability for hypothesis 3: both trait associated, but different signals",
                                         "Posterior probability for hypothesis 4: both trait associated, shared signal"))
 
-save(ColocTable, description,file="../results/06_2_coloc_eQTLs.RData")
+save(ColocTable, description,file="../results/05_2_coloc_eQTLs.RData")
 
 tosave4 = data.table(data = c("ColocTable", "description"), 
                      SheetNames = c("ColocTable", "Description"))
-excel_fn = "../results/06_2_coloc_eQTLs.xlsx"
+excel_fn = "../results/05_2_coloc_eQTLs.xlsx"
 
 WriteXLS(tosave4$data, 
          ExcelFileName=excel_fn, 

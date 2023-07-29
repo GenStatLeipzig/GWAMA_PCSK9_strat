@@ -81,8 +81,8 @@ getCredibleSet<-function(filename, type, CHR, region_start, region_end, NR, SNP,
   abline(h=0.99,col="red")
   
   # Step 8: Save complete data set and return filtered data 
-  if(dir.exists("../results/04_CredSets/")==F) dir.create("../results/04_CredSets/") 
-  outfn = paste0("../results/04_CredSets/",NR,"::",candidateGene,"::",pheno,"::",SNP,".txt")
+  if(dir.exists("../results/03_CredSets/")==F) dir.create("../results/03_CredSets/") 
+  outfn = paste0("../results/03_CredSets/",NR,"__",candidateGene,"__",pheno,"__",SNP,".txt")
   fwrite(data,file=outfn,sep = "\t")
   
   data<-data[1:min(which(data[,SumProb]>0.99))]

@@ -29,14 +29,18 @@ source("../helperFunctions/MRfunction_jp.R")
 
 #' # Load ####
 #' ***
-load("../results/05_GCTA_COJO.RData")
+load("../results/03_GCTA_COJO_filtered.RData")
+IndepSignals = IndepSignals_filtered[!duplicated(SNP),]
 myTab = copy(IndepSignals)
 myTab = myTab[candidateGene == "PCSK9"]
 
-load("../temp/06_OtherGWASs.RData")
+load("../temp/05_OtherGWASs.RData")
 myOtherGWAS = myOtherGWAS[grepl("LDL",phenotype)]
 myOtherGWAS = myOtherGWAS[candidateGene == "PCSK9"]
 myOtherGWAS = myOtherGWAS[bp_hg19 %in% myTab$bp]
+
+load("../temp/04_IATest_input.RData")
+data_GWAS = result.2[markername %in% myTab$SNP,]
 
 #' # Match ####
 #' ***
@@ -45,24 +49,23 @@ myLipids[,dumID := paste0(bp_hg19,"_male")]
 myLipids[grepl("FEMALE",phenotype),dumID := paste0(bp_hg19,"_female")]
 myLipids[grepl("ALL",phenotype),dumID := paste0(bp_hg19,"_combined")]
 
-myTab[,dumID := paste0(bp,"_")]
-myTab[num %in% c(1,2),dumID := paste0(bp,"_female")]
-myTab[num %in% c(4:6),dumID := paste0(bp,"_male")]
-myTab[num %in% c(3,7),dumID := paste0(bp,"_combined")]
+data_GWAS[,dumID := paste0(bp_hg19,"_combined")]
+data_GWAS[grepl("_female",phenotype),dumID := paste0(bp_hg19,"_female")]
+data_GWAS[grepl("_male",phenotype),dumID := paste0(bp_hg19,"_male")]
 
-matched = match(myTab$dumID,myLipids$dumID)
+matched = match(data_GWAS$dumID,myLipids$dumID)
 table(is.na(matched))
 myLipids = myLipids[matched]
-table(myLipids$dumID == myTab$dumID)
+table(myLipids$dumID == data_GWAS$dumID)
 
 #' # Check allele ####
 #' ***
-plot(myTab$freq,myLipids$EAF)
+plot(data_GWAS$EAF,myLipids$EAF)
 abline(0,1)
 
-table(myLipids$EA == myTab$refA)
-table(myLipids$OA == myTab$refA)
-filt = myLipids$EA != myTab$refA
+table(myLipids$EA == data_GWAS$EA)
+table(myLipids$OA == data_GWAS$EA)
+filt = myLipids$EA != data_GWAS$EA
 
 EA1 = myLipids$EA
 OA1 = myLipids$OA
@@ -71,18 +74,17 @@ myLipids[filt, OA := EA1[filt]]
 myLipids[filt, EAF     := 1-EAF    ]
 myLipids[filt, beta:= beta     *(-1)]
 
-plot(myTab$freq,myLipids$EAF)
+plot(data_GWAS$EAF,myLipids$EAF)
 abline(0,1)
 
-table(myLipids$EA == myTab$refA)
+table(myLipids$EA == data_GWAS$EA)
 
 #' # Merge ####
 #' ***
-myMRTab = copy(myTab)
-myMRTab = myMRTab[,c(15,2,1,3:9)]
+myMRTab = copy(data_GWAS)
+myMRTab = myMRTab[,c(16,1,2,3,4,6,10,11,12,8)]
 names(myMRTab)
 names(myMRTab) = c("phenotype","SNP","chr","pos","EA","EAF.PCSK9","beta.PCSK9","SE.PCSK9","P.PCSK9","N.PCSK9")
-myMRTab[,N.PCSK9 := ceiling(N.PCSK9)]
 
 myMRTab[,EAF.LDLC := myLipids$EAF]
 myMRTab[,beta.LDLC := myLipids$beta]
@@ -95,7 +97,10 @@ myMRTab
 #' # Get Ratio ####
 #' ***
 
-test_PCSK9_LDL = myMRTab[,MRfunction_jp(betaX = beta.PCSK9,seX = SE.PCSK9,betaY = beta.LDLC,seY = SE.LDLC)]
+test_PCSK9_LDL = myMRTab[,MRfunction_jp(betaX = beta.PCSK9,
+                                        seX = SE.PCSK9,
+                                        betaY = beta.LDLC,
+                                        seY = SE.LDLC)]
 myMRTab[,beta.Ratio := test_PCSK9_LDL$beta_IV]
 myMRTab[,SEst.Ratio := test_PCSK9_LDL$se_IV1]
 myMRTab[,SEnd.Ratio := test_PCSK9_LDL$se_IV2]
@@ -104,21 +109,37 @@ myMRTab[,Pnd.Ratio := test_PCSK9_LDL$p_IV2]
 
 #' # Get meta per phenotype ####
 #' ***
-table(myMRTab$phenotype)
+phen = unique(myMRTab$phenotype)
 
-mymod_fa<-myMRTab[phenotype == "PCSK9_females",metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
-mymod_ff<-myMRTab[phenotype == "PCSK9_females_free",metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
-mymod_ma<-myMRTab[phenotype == "PCSK9_males",metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
-mymod_mf<-myMRTab[phenotype == "PCSK9_males_free",metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
-mymod_af<-myMRTab[phenotype == "PCSK9_free",metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
+mymod1<-myMRTab[phenotype == phen[1],
+                metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
+mymod2<-myMRTab[phenotype == phen[2],
+                metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
+mymod3<-myMRTab[phenotype == phen[3],
+                metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
+mymod4<-myMRTab[phenotype == phen[4],
+                metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
+mymod5<-myMRTab[phenotype == phen[5],
+                metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
+mymod6<-myMRTab[phenotype == phen[6],
+                metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
+mymod7<-myMRTab[phenotype == phen[7],
+                metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
+mymod8<-myMRTab[phenotype == phen[8],
+                metagen(TE = beta.Ratio,seTE = SEnd.Ratio,studlab =  SNP)]
 
 dummy = myMRTab[,.N,phenotype]
 dummy[,outcome :="LDL-C"]
-dummy[,beta_IV := c(mymod_fa$TE.fixed,mymod_ff$TE.fixed,mymod_ma$TE.fixed,mymod_mf$TE.fixed, mymod_af$TE.fixed, myMRTab$beta.Ratio[c(11,12)])]
-dummy[,SE_IV := c(mymod_fa$seTE.fixed,mymod_ff$seTE.fixed,mymod_ma$seTE.fixed,mymod_mf$seTE.fixed, mymod_af$seTE.fixed, myMRTab$SEnd.Ratio[c(11,12)])]
-dummy[,pval_IV := c(mymod_fa$pval.fixed,mymod_ff$pval.fixed,mymod_ma$pval.fixed,mymod_mf$pval.fixed, mymod_af$pval.fixed, myMRTab$Pnd.Ratio[c(11,12)])]
-dummy[,Q_IV := c(mymod_fa$Q,mymod_ff$Q,mymod_ma$Q,mymod_mf$Q,mymod_af$Q, NA,NA)]
-dummy[,pvalQ_IV := c(mymod_fa$pval.Q,mymod_ff$pval.Q,mymod_ma$pval.Q,mymod_mf$pval.Q,mymod_af$pval.Q, NA,NA)]
+dummy[,beta_IV := c(mymod1$TE.fixed,mymod2$TE.fixed,mymod3$TE.fixed,mymod4$TE.fixed,
+                    mymod5$TE.fixed,mymod6$TE.fixed,mymod7$TE.fixed,mymod8$TE.fixed)]
+dummy[,SE_IV := c(mymod1$seTE.fixed,mymod2$seTE.fixed,mymod3$seTE.fixed,mymod4$seTE.fixed,
+                  mymod5$seTE.fixed,mymod6$seTE.fixed,mymod7$seTE.fixed,mymod8$seTE.fixed)]
+dummy[,pval_IV := c(mymod1$pval.fixed,mymod2$pval.fixed,mymod3$pval.fixed,mymod4$pval.fixed,
+                    mymod5$pval.fixed,mymod6$pval.fixed,mymod7$pval.fixed,mymod8$pval.fixed)]
+dummy[,Q_IV := c(mymod1$Q,mymod2$Q,mymod3$Q,mymod4$Q,
+                 mymod5$Q,mymod6$Q,mymod7$Q,mymod8$Q)]
+dummy[,pvalQ_IV := c(mymod1$pval.Q,mymod2$pval.Q,mymod3$pval.Q,mymod4$pval.Q,
+                     mymod5$pval.Q,mymod6$pval.Q,mymod7$pval.Q,mymod8$pval.Q)]
 
 MRTab_PCSK9SNPs = copy(dummy)
 

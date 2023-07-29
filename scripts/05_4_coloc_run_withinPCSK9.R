@@ -41,29 +41,33 @@ source("../helperFunctions/colocFunction_jp.R")
 
 #' # Get ToDoList ####
 #' ***
-load("../results/05_GCTA_COJO.RData")
+load("../results/03_GCTA_COJO.RData")
+IndepSignals = IndepSignals[!duplicated(candidateGene)]
 
-ToDoList = copy(IndepSignals)
-ToDoList = ToDoList[c(1,13:24),c(1:5,15,19:21,26)]
-ToDoList
+ToDoList = data.table(NR = 1:8)
+
+ToDoList[,statistic := list.files(path = "../data/",pattern = "PCSK9")]
+ToDoList[,statistic_path := paste0("../data/",statistic)]
+
+ToDoList[,pheno := gsub("SumStat_","",statistic)]
+ToDoList[,pheno := gsub("_23.*","",pheno)]
 
 #' # Load and filter data ####
 #' ***
-myPhenos = unique(ToDoList$pheno)
 
-dumTab1 = foreach(i = 1:length(myPhenos))%do%{
+dumTab1 = foreach(i = 1:dim(ToDoList)[1])%do%{
   # i=1
-  myPheno = myPhenos[i]
+  myPheno = ToDoList[i,pheno]
   message("Working on phenotype ",myPheno)
   
-  myFileName = paste0("../data/SumStat_",myPheno,"_230120.txt.gz")
+  myFileName = ToDoList[i,statistic_path]
   
   data_GWAS1 = fread(myFileName)
   data_GWAS1 = data_GWAS1[invalidAssocs==F,]
   
-  dumTab2 = foreach(j = 1:dim(ToDoList)[1])%do%{
+  dumTab2 = foreach(j = 1:dim(IndepSignals)[1])%do%{
     # j=1
-    myRow = copy(ToDoList)
+    myRow = copy(IndepSignals)
     myRow = myRow[j,]
     message("     Working on gene ",myRow$candidateGene)
     
@@ -82,7 +86,7 @@ dumTab1 = foreach(i = 1:length(myPhenos))%do%{
     
   }
   dumTab2 = rbindlist(dumTab2)
-  stopifnot(length(unique(dumTab2$candidateGene))==13)
+  stopifnot(length(unique(dumTab2$candidateGene))==11)
   dumTab2
 }
 data_GWAS = rbindlist(dumTab1)
@@ -95,14 +99,14 @@ data_GWAS[,table(phenotype, setting_statin)]
 
 data_GWAS[,MAF := EAF]
 data_GWAS[EAF>0.5,MAF := 1-EAF]
-save(data_GWAS,file = "../temp/06_GWAS_allLoci.RData")
+save(data_GWAS,file = "../temp/05_GWAS_allLoci.RData")
 
 
 #' # Run Coloc ####
 #' ***
-dumTab1 = foreach(i=1:dim(ToDoList)[1])%do%{
-  #i=2
-  myRow = copy(ToDoList)
+dumTab1 = foreach(i=1:dim(IndepSignals)[1])%do%{
+  #i=1
+  myRow = copy(IndepSignals)
   myRow = myRow[i,]
   
   data_GWAS1 = copy(data_GWAS)
@@ -408,14 +412,6 @@ ColocTable[PP.H4.abf>=0.75,]
 ColocTable[PP.H2.abf>=0.75,]
 ColocTable[PP.H1.abf>=0.75,]
 
-#' **Summary**: 
-#' 
-#' * APOB & PCSK9 have the same signals in males and females (yes, weaker in one sex, but shared signal!)
-#' * PLB1, CYP51A1P3, & SLCO1B1 have only signal in females (not in males)
-#' * MYNC has signal only in males & only in free setting
-#' * PRKAG2 & NOS1 have only signal in males (not in females)
-#' * TM6SF2 has signal only in free setting
-#' 
 #' # Save results ####
 #' ***
 ColocTable = ColocTable[,c(7:9,1:6)]
@@ -431,11 +427,11 @@ description = data.table(column = names(ColocTable),
                                         "Posterior probability for hypothesis 3: both trait associated, but different signals",
                                         "Posterior probability for hypothesis 4: both trait associated, shared signal"))
 
-save(ColocTable, description,file="../results/06_4_coloc_withinPCSK9.RData")
+save(ColocTable, description,file="../results/05_4_coloc_withinPCSK9.RData")
 
 tosave4 = data.table(data = c("ColocTable", "description"), 
                      SheetNames = c("ColocTable", "Description"))
-excel_fn = "../results/06_4_coloc_withinPCSK9.xlsx"
+excel_fn = "../results/05_4_coloc_withinPCSK9.xlsx"
 
 WriteXLS(tosave4$data, 
          ExcelFileName=excel_fn, 

@@ -35,13 +35,13 @@ setwd(paste0(projectpath_main,"scripts/"))
 
 #' # Step 1: Get genes per region ####
 #' ***
-load("../results/05_GCTA_COJO.RData")
+load("../results/03_GCTA_COJO.RData")
 
 myPhenos = unique(IndepSignals$pheno)
 mySNPs = unique(IndepSignals$SNP)
 
-genes = fread("../../2210_GWAMA/06_Annotation/results/synopsis/topliste_tabdelim/proximate_genes_2023-01-26_PCSK9_sex_strat_v2.txt")
-eQTLs = fread("../../2210_GWAMA/06_Annotation/results/synopsis/topliste_tabdelim/eqtlinfo_2023-01-26_PCSK9_sex_strat_v2.txt")
+genes = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/proximate_genes_2023-07-26_PCSK9_strat.txt")
+eQTLs = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/eqtlinfo_2023-07-26_PCSK9_strat.txt")
 
 genes = genes[markername %in% mySNPs,]
 eQTLs = eQTLs[snps %in% mySNPs,]
@@ -54,12 +54,13 @@ res = data.table(markername = c(eQTLs$snps,genes$markername),
                  source = c(rep("eQTL",dim(eQTLs)[1]),rep("proxGene",dim(genes)[1])),
                  chr =c(eQTLs$chr,genes$chr))
 
-res[genes == "BRE", genes:="BABAM2"]
-res[genes == "MYCNUN", genes:="MYCNUT"]
-res[genes == "PHF5CP", genes:="PHF5AP1"]
-res[genes == "LST3", genes:="SLCO1B3"]
-res[genes == "MEF2BNB-MEF2B", genes:="BORCS8-MEF2B"]
+res[genes == "MARCH8", genes:="MARCHF8"]
+res[genes == "ANUBL1", genes:="ZFAND4"]
+res[genes == "FAM21C", genes:="WASHC2C"]
+res[genes == "FTHL16", genes:="FTH1P16"]
+res[genes == "FTSJD1", genes:="CMTR2"]
 res[genes == "MEF2BNB", genes:="BORCS8"]
+res[genes == "LST3", genes:="SLCO1B3"]
 res[genes == "KIAA1683", genes:="IQCN"]
 res[genes == "KIAA0892", genes:="MAU2"]
 res[genes == "C2orf43", genes:="LDAH"]
@@ -77,7 +78,7 @@ candidateGenes = unique(res$genes)
 candidateGenes = candidateGenes[candidateGenes!=""]
 myGenTab<-data.table(genename=candidateGenes)
 
-genes38 = fread("../temp/06_HGNC_Download_221125.txt")
+genes38 = fread("../temp/05_HGNC_Download_221125.txt")
 table(is.element(myGenTab$genename, genes38$symbol))
 myGenTab[!is.element(genename,genes38$symbol),]
 
@@ -185,7 +186,8 @@ dumTab1<-foreach(i=c(1:length(myeQTLs)))%do%{
   message("          Saving ",x1," filtered SNPs")
 
   # Step 7: Save eqtl data
-  outfn1<-paste0("../temp/06_coloc/GTEx_v8_filtered_",myTissue,".RData")
+  if(dir.exists("../temp/05_coloc/")==F) dir.create("../temp/05_coloc/") 
+  outfn1<-paste0("../temp/05_coloc/GTEx_v8_filtered_",myTissue,".RData")
   save(data0,file=outfn1)
   # load(outfn1)
   
@@ -211,7 +213,7 @@ mySums = rowSums(myGenTab[,c(9:x),with=F], na.rm=TRUE)
 table(mySums == 0)
 myGenTab = myGenTab[mySums != 0,]
 
-save(myGenTab,file="../results/06_1_usedGenes.RData")
+save(myGenTab,file="../results/05_1_usedGenes.RData")
 
 #' # Sessioninfo ####
 #' ***
