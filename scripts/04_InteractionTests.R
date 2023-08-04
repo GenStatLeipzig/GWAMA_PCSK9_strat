@@ -47,17 +47,25 @@ ToDoList[,pheno := gsub("_23.*","",pheno)]
 
 load("../results/03_GCTA_COJO_filtered.RData")
 IndepSignals = IndepSignals_filtered[!duplicated(SNP),]
+load("../results/02_LociOverallPhenotypes_filtered.RData")
+IndepSignals[!is.element(SNP,result.5$markername)]
+result.5[!is.element(markername,IndepSignals$SNP)]
+
+#' Decision: I keep the SNP at chr 12 with the rsID, which is quite similar to the top SNP (which has no rsID). For chr 6 I keep the top SNP
+#' 
+mySNPs = c(result.5$markername[-8],IndepSignals$SNP[c(2:4,11)])
 
 dumTab = foreach(i = 1:dim(ToDoList)[1])%do%{
   #i=1
   myRow = ToDoList[i,]
   message("Working on data ",myRow$pheno)
   data = fread(myRow$statistic_path)
-  data = data[markername %in% IndepSignals$SNP,]
+  data = data[markername %in% mySNPs,]
   data
 }
 
 result.0 = rbindlist(dumTab)
+IndepSignals[6,SNP := result.5$markername[3]]
 matched = match(result.0$markername,IndepSignals$SNP)
 result.0[,candidateGene := IndepSignals[matched,candidateGene]]
 result.0[,rsID := gsub(":.*","",markername)]
@@ -129,6 +137,7 @@ IATab_2way_sex = TwoWayInteractionTest_jp(data = result.2,
                                           pheno1 = "males",
                                           pheno2 = "females",
                                           type = "sexIA",
+                                          useBestPheno = F,
                                           corCol = "corSex")
 
 matched = match(IATab_2way_sex$markername,result.2$markername)
@@ -141,6 +150,7 @@ IATab_2way_statin = TwoWayInteractionTest_jp(data = result.2,
                                              pheno1 = "treated",
                                              pheno2 = "free",
                                              type = "statinIA",
+                                             useBestPheno = F,
                                              corCol = "corStatin")
 
 matched = match(IATab_2way_statin$markername,result.2$markername)
@@ -190,12 +200,10 @@ IATab[IA_hierarch_fdr5proz==T & type=="statinIA",c(1:25,38,39)]
 
 #' **Summary** 2-way statin interaction:
 #' 
-#' - **PCSK9, rs11591147**: sex-related, stronger in statin-free individuals
-#' - **PCSK9, rs11583680**: sex-related, stronger in statin-treated individuals
+#' - **PCSK9, rs11591147**: statin-related, stronger in statin-free individuals
 #' - **APOB**: free-specific effect
 #' - **KHDRBS2**: treated-specific effect
 #' - **PRKAG2**: free-specific effect
-#' - **ALOX5**: free-specific effect
 #' 
 #' ## Save ####
 IATab = IATab[,c(1:13,38,39,14:37)]
