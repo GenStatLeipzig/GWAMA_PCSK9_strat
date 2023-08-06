@@ -58,7 +58,7 @@ myCAD[,MAF := EAF]
 myCAD[EAF>0.5,MAF := 1-EAF]
 myCAD = myCAD[MAF>=0.01,]
 myCAD[,phenotype := "CAD"]
-myCAD[,candidateGene := ToDoList[1,candidateGene]]
+myCAD[,candidateGene := "PCSK9"]
 myCAD[,EA:=toupper(EA)]
 myCAD[,OA:=toupper(OA)]
 myNames = c("SNP","chr","bp_hg19","EA","OA","EAF","MAF","beta","SE","pval","nSamples","candidateGene","phenotype")
@@ -82,7 +82,7 @@ dumTab2 = foreach(j = 1:dim(IndepSignals)[1])%do%{
   
 }
 myCAD = rbindlist(dumTab2)
-myCAD[,phenotype := "CAD"]
+myCAD[,table(candidateGene)]
 
 
 #' ## Lipids data ####
@@ -184,12 +184,12 @@ dumTab2 = foreach(j = 1:dim(IndepSignals)[1])%do%{
   
 }
 mySleep = rbindlist(dumTab2)
-mySleep[,phenotype := "sleep_duration"]
+mySleep[,table(candidateGene)]
 
 #' ## Save other GWAS data ####
 myOtherGWAS = rbind(myCAD,myLipids,mySleep)
 save(myOtherGWAS, file="../temp/05_OtherGWASs.RData")
-load("../temp/05_OtherGWASs.RData")
+#load("../temp/05_OtherGWASs.RData")
 
 #' # Run Coloc ####
 #' ***

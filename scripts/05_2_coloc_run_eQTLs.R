@@ -42,6 +42,18 @@ table(is.element(IndepSignals$candidateGene,myGenTab$genename))
 matched = match(IndepSignals$candidateGene,myGenTab$genename)
 IndepSignals[,cytoband := myGenTab[matched,cytoband]]
 
+myGenTab[,cytoband2 := cytoband]
+myGenTab[cytoband == "10q11.21-q11.22",cytoband2 := "10q11.21"]
+myGenTab[cytoband == "10q11.22",cytoband2 := "10q11.21"]
+myGenTab[cytoband == "11q12.2-q12.3",cytoband2 := "11q12.2"]
+myGenTab[cytoband == "11q12.3",cytoband2 := "11q12.2"]
+myGenTab[cytoband == "11q14.1",cytoband2 := "11q12.2"]
+myGenTab[cytoband == "12p12.1",cytoband2 := "12p12.2"]
+myGenTab[cytoband == "12q24.22-q24.23",cytoband2 := "12q24.22"]
+myGenTab[cytoband == "16q22.2-q22.3",cytoband2 := "16q22.2"]
+myGenTab[cytoband == "19p12",cytoband2 := "19p13.11"]
+myGenTab[cytoband == "19p13",cytoband2 := "19p13.11"]
+
 ToDoList = data.table(NR = 1:8)
 
 ToDoList[,statistic := list.files(path = "../data/",pattern = "PCSK9")]
@@ -49,6 +61,7 @@ ToDoList[,statistic_path := paste0("../data/",statistic)]
 
 ToDoList[,pheno := gsub("SumStat_","",statistic)]
 ToDoList[,pheno := gsub("_23.*","",pheno)]
+
 
 #' # Run Coloc ####
 #' ***
@@ -62,7 +75,7 @@ ToDoList[,pheno := gsub("_23.*","",pheno)]
 registerDoMC(cores=20)
 
 dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
-  #k=1
+  #k=5
   myPheno = ToDoList[k,pheno]
   # myPheno2 = gsub(myPheno,pattern="\\_.*",replacement = "")
   message("Working on phenotype ",myPheno)
@@ -80,18 +93,19 @@ dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
   data_GWAS[EAF>0.5,maf := 1-EAF]
   
   # relevant loci
-  uniqueCytos = IndepSignals[pheno == myPheno, unique(cytoband)]
+  uniqueCytos1 = IndepSignals[pheno == myPheno, unique(cytoband)]
+  uniqueCytos2 = myGenTab[cytoband2 %in% uniqueCytos1, unique(cytoband)]
   
   myeQTLs2<-dir(path = "../temp/05_coloc/",pattern = ".RData")
   
   dumTab2 = foreach(i=c(1:length(myeQTLs2)))%dopar%{
-    #i=1
+    #i=3
     loaded = load(paste0("../temp/05_coloc/",myeQTLs2[i]))
     data_eQTLs = get(loaded)
     myTissue2 = gsub("GTEx_v8_filtered_","",myeQTLs2[i])
     myTissue2 = gsub(".RData","",myTissue2)
     message("Working on tissue ",myTissue2)
-    data_eQTLs = data_eQTLs[cyto %in% uniqueCytos,]
+    data_eQTLs = data_eQTLs[cyto %in% uniqueCytos2,]
     
     # get To Do list
     dummy = data_eQTLs[,.N,by=gene]
@@ -99,7 +113,7 @@ dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
     dummy = dummy[gene %in% ToDoList2[,genename]]
     
     dumTab3 = foreach(j=c(1:dim(dummy)[1]))%do%{
-      #j=1
+      #j=8
       myRow = dummy[j,]
       moreInfo = copy(ToDoList2)
       moreInfo = moreInfo[genename == myRow$gene,]

@@ -27,32 +27,34 @@ source("../SourceFile_angmar.R")
 setwd(paste0(projectpath_main,"scripts/"))
 source("../helperFunctions/colocFunction_jp.R")
 
-#' # Get ToDoList ####
+#' # Load data ####
 #' ***
-load("../results/05_GCTA_COJO.RData")
+load("../temp/05_PCSK9cond.RData")
+data_GWAS[,.N,by=pheno]
 
-ToDoList = copy(IndepSignals)
-ToDoList = ToDoList[multipleSignals == T,]
-ToDoList[,otherGWAS := "lipids"]
-ToDoList2 = copy(ToDoList)
-ToDoList2[,otherGWAS := "CAD"]
-ToDoList = rbind(ToDoList2,ToDoList)
+load("../temp/05_OtherGWASs.RData")
+myOtherGWAS[,.N,by=phenotype]
 
-#' Okay, how many tests will this create? 
-#' 
-#' --> for each of the 10 signals all 5 lipid traits (sex-matched)
-#' --> for each of the 10 signal CAD
-#' 
-#' # Load PCSK9 data ####
+myPhenos = unique(data_GWAS$pheno)
+myPhenos
+
+myOtherGWASPhenos = c("CAD","HDL","LDL","logTG","nonHDL","TC")
+
+ToDoList = data.table(trait1 = rep(myPhenos,each=6),
+                      trait2 = rep(myOtherGWASPhenos,8))
+ToDoList[grepl("_female",trait1),trait2 := paste0(trait2,"_INV_FEMALE")]
+ToDoList[grepl("_male",trait1),trait2 := paste0(trait2,"_INV_MALE")]
+ToDoList[!grepl("INV",trait2),trait2 := paste0(trait2,"_INV_ALL")]
+ToDoList[grepl("CAD",trait2),trait2 := "CAD"]
+
+table(is.element(ToDoList$trait2,myOtherGWAS$phenotype))
+mySNPs = unique(gsub(".*__","",myPhenos))
+
+#' # Prep data ####
 #' ***
-load("../temp/06_PCSK9cond.RData")
 data_GWAS[,MAF := freq]
 data_GWAS[,chrPos_b37 := paste0("chr1:",bp)]
 
-#' # Load lipid data ####
-#' ***
-load("../temp/06_OtherGWASs.RData")
-myOtherGWAS
 myOtherGWAS = myOtherGWAS[candidateGene == "PCSK9"]
 myOtherGWAS[,table(phenotype)]
 setnames(myOtherGWAS,"bp_hg19","bp")
@@ -68,100 +70,46 @@ setnames(myOtherGWAS,"nSamples","N")
 #' ***
 data_GWAS[,ChrPos := paste(Chr,bp,sep=":")]
 myOtherGWAS[,ChrPos := paste(chr,bp,sep=":")]
-myOtherGWAS[,phenotype := gsub("MALE","MALES",phenotype)]
 
 dumTab1 = foreach(i=1:dim(ToDoList)[1])%do%{
-  #i=11
+  #i=1
   myRow = copy(ToDoList)
   myRow = myRow[i,]
-  sex = unlist(strsplit(myRow$pheno,"_"))[2]
-  sex = toupper(sex)
-  if(sex %in% c("FREE","TREATED"))sex = "ALL"
-  myPheno = paste(myRow$pheno,myRow$rsID,sep="_")
-  
-  message("working on phenotype ",myPheno, " and candidate gene ",myRow$candidateGene)
   
   data_GWAS1 = copy(data_GWAS)
-  data_GWAS1 = data_GWAS1[pheno == myPheno ,]
+  data_GWAS1 = data_GWAS1[pheno == myRow$trait1 ,]
   
   data_GWAS2 = copy(myOtherGWAS)
+  data_GWAS2 = data_GWAS2[phenotype == myRow$trait2 ,]
   
-  if(myRow$otherGWAS == "lipids"){
-    myLipidTraits = unique(data_GWAS2$phenotype)
-    myLipidTraits = myLipidTraits[grepl(paste0("_",sex),myLipidTraits)]
-    
-    dumTab2 = foreach(j=1:length(myLipidTraits))%do%{
-      #j=1
-      myLipidTrait = myLipidTraits[j]
-      message("    working on lipid ",myLipidTrait)
-      
-      data_GWAS3 = copy(data_GWAS2)
-      data_GWAS3 = data_GWAS3[phenotype == myLipidTrait,]
-      
-      data_GWAS4 = copy(data_GWAS1)
-      data_GWAS4 = data_GWAS4[ChrPos %in% data_GWAS3$ChrPos,]
-      data_GWAS3 = data_GWAS3[ChrPos %in% data_GWAS4$ChrPos,]
-      
-      setorder(data_GWAS3,bp)
-      setorder(data_GWAS4,bp)
-      
-      res = colocFunction_jp(tab1 = data_GWAS4,tab2 = data_GWAS3,
-                             trait1 = myPheno,trait2 = myLipidTrait,
-                             locus = "1p32.3",locus_name = "PCSK9",plotting = F,
-                             col_SNPID = "ChrPos", col_pos = "bp",
-                             col_beta = "bC",col_se = "bC_se",col_P = "pC",
-                             col_N = "N",col_MAF = "MAF",
-                             col_effect = "refA",col_other="refA2")
-      x2<-as.data.table(res)
-      x3<-t(x2)
-      x4<-as.data.table(x3)
-      names(x4)<-names(res)
-      x4[,gene:= myRow$candidateGene]
-      x4[,trait1:= myPheno]
-      x4[,trait2:=myLipidTrait]
-      x4
-    }
-    dumTab2 = rbindlist(dumTab2)
-  }else{
-    message("    working on trait ",myRow$otherGWAS)
-    
-    data_GWAS3 = copy(data_GWAS2)
-    data_GWAS3 = data_GWAS3[phenotype == myRow$otherGWAS]
-    trait2 = unique(data_GWAS3$phenotype)
-    
-    data_GWAS4 = copy(data_GWAS1)
-    data_GWAS4 = data_GWAS4[ChrPos %in% data_GWAS3$ChrPos,]
-    data_GWAS3 = data_GWAS3[ChrPos %in% data_GWAS4$ChrPos,]
-    
-    setorder(data_GWAS3,bp)
-    setorder(data_GWAS4,bp)
-    
-    if(sum(!is.na(data_GWAS3$MAF))==0){
-      data_GWAS3[,MAF := NULL]
-    }
-    
-    res = colocFunction_jp(tab1 = data_GWAS4,tab2 = data_GWAS3,
-                           trait1 = myPheno,trait2 = myLipidTrait,
-                           locus = "1p32.3",locus_name = "PCSK9",plotting = F,
-                           col_SNPID = "ChrPos", col_pos = "bp",
-                           col_beta = "bC",col_se = "bC_se",col_P = "pC",
-                           col_N = "N",col_MAF = "MAF",
-                           col_effect = "refA",col_other="refA2")
-    x2<-as.data.table(res)
-    x3<-t(x2)
-    x4<-as.data.table(x3)
-    names(x4)<-names(res)
-    x4[,gene:= myRow$candidateGene]
-    x4[,trait1:= myPheno]
-    x4[,trait2:=trait2]
-    dumTab2 = x4
-  }
-  dumTab2
+  data_GWAS1 = data_GWAS1[ChrPos %in% data_GWAS2$ChrPos,]
+  data_GWAS2 = data_GWAS2[ChrPos %in% data_GWAS1$ChrPos,]
+  
+  setorder(data_GWAS1,bp)
+  setorder(data_GWAS2,bp)
+  
+  res = colocFunction_jp(tab1 = data_GWAS1,tab2 = data_GWAS2,
+                         trait1 = myRow$trait1,trait2 = myRow$trait2,
+                         locus = "1p32.3",locus_name = "PCSK9",plotting = F,
+                         col_SNPID = "ChrPos", col_pos = "bp",
+                         col_beta = "bC",col_se = "bC_se",col_P = "pC",
+                         col_N = "N",col_MAF = "MAF",
+                         col_effect = "refA",col_other="refA2")
+  x2<-as.data.table(res)
+  x3<-t(x2)
+  x4<-as.data.table(x3)
+  names(x4)<-names(res)
+  x4[,gene:= "PCSK9"]
+  x4[,trait1:= myRow$trait1]
+  x4[,trait2:= myRow$trait2]
+  x4
   
 }
 ColocTable = rbindlist(dumTab1)
-
-ColocTable[,table(PP.H4.abf>=0.75)]
+ColocTable[,SNP := gsub(".*__","",trait1)]
+ColocTable[,trait1 := gsub("__.*","",trait1)]
+ColocTable[,trait3 := gsub("_INV.*","",trait2)]
+ColocTable[,table(PP.H4.abf>=0.75,trait3,SNP)]
 ColocTable[,table(PP.H3.abf>=0.75)]
 ColocTable[,table(PP.H2.abf>=0.75)]
 ColocTable[,table(PP.H1.abf>=0.75)]
@@ -173,12 +121,12 @@ ColocTable[PP.H1.abf>=0.75,]
 
 #' # Save results ####
 #' ***
-ColocTable = ColocTable[,c(7:9,1:6)]
+ColocTable = ColocTable[,c(10,8,9,1:6)]
 
 description = data.table(column = names(ColocTable),
-                         description = c("Candidate Gene of tested region", 
+                         description = c("Independent variant", 
                                          "Tested PCSK9 subgroup ",
-                                         "Tested lipid ",
+                                         "Tested other GWAS trait",
                                          "Number of SNPs included in co-localization analysis per test",
                                          "Posterior probability for hypothesis 0: neither trait associated",
                                          "Posterior probability for hypothesis 1: only trait 1 associated (CKDGen trait)",
@@ -186,11 +134,11 @@ description = data.table(column = names(ColocTable),
                                          "Posterior probability for hypothesis 3: both trait associated, but different signals",
                                          "Posterior probability for hypothesis 4: both trait associated, shared signal"))
 
-save(ColocTable, description,file="../results/06_7_coloc_otherGWAScond.RData")
+save(ColocTable, description,file="../results/05_7_coloc_otherGWAScond.RData")
 
 tosave4 = data.table(data = c("ColocTable", "description"), 
                      SheetNames = c("ColocTable", "Description"))
-excel_fn = "../results/06_7_coloc_otherGWAScond.xlsx"
+excel_fn = "../results/05_7_coloc_otherGWAScond.xlsx"
 
 WriteXLS(tosave4$data, 
          ExcelFileName=excel_fn, 
