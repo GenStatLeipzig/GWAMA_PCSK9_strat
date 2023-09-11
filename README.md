@@ -2,98 +2,86 @@
 
 **Contributor: Janne Pott**
 
-**Last Updated: 28/07/2023**
+**Last Updated: 11/09/2023**
 
 Supporting code for the following paper:
 
-* Pott J, et al. Sex- and statin-stratified GWAMA of PCSK9 reveal novel hits in Europeans. 
+-   Pott J, et al. Working title: Sex- and statin-stratified GWAMA of PCSK9 reveal novel hits in Europeans
 
 This project is an extension to our previous publications:
 
-* Pott J, Burkhardt R, Beutner F, Horn K, Teren A, Kirsten H, et al. Genome-wide meta-analysis identifies novel loci of plaque burden in carotid artery. _Atherosclerosis_. 2017;259:32–40. [DOI](https://doi.org/10.1016/j.atherosclerosis.2017.02.018).
-* Pott J, Gadin J, Theusch E, Kleber ME, Delgado GE, Kirsten H, et al. Meta-GWAS of PCSK9 levels detects two novel loci at APOB and TM6SF2. _Hum Mol Genet_ 2021. [DOI](https://doi.org/10.1093/hmg/ddab279).
+-   Pott J, Burkhardt R, Beutner F, Horn K, Teren A, Kirsten H, et al. Genome-wide meta-analysis identifies novel loci of plaque burden in carotid artery. *Atherosclerosis*. 2017;259:32--40. [DOI](https://doi.org/10.1016/j.atherosclerosis.2017.02.018).
+-   Pott J, Gadin J, Theusch E, Kleber ME, Delgado GE, Kirsten H, et al. Meta-GWAS of PCSK9 levels detects two novel loci at APOB and TM6SF2. *Hum Mol Genet* 2021. [DOI](https://doi.org/10.1093/hmg/ddab279).
 
-We are providing the main scripts used in the GWAMA of PCSK9 levels in four European Cohorts (LIFE-Adult, LIFE-Heart, LURIC, TwinGene, KORA-F3, and GCKD), stratified by sex and statin treatment, to empower other researchers to reproduce our results, starting from the summary statistics. Data can be found on zenodo (LINK tba)
+We are providing the main scripts used in the GWAMA of PCSK9 levels in four European Cohorts (LIFE-Adult, LIFE-Heart, LURIC, TwinGene, KORA-F3, and GCKD), stratified by sex and statin treatment, to empower other researchers to reproduce our results, starting from the summary statistics. Data can be found on zenodo (LINK *tba*)
 
 ## Source File
 
 You will need to customize a source file, indicating
 
-- R library and R packages: all scripts were run under [R Version 4.x](https://cran.r-project.org/). All necessary packages are listed in the source file. Additional function not published in any R package are listed in the directory 'helperFunctions'. 
-- Path to tools other than R: 
+-   R library and R packages: all scripts were run under [R Version 4.x](https://cran.r-project.org/). All necessary packages are listed in the source file. Additional function not published in any R package are listed in the directory 'helperFunctions'.
 
-    - [PLINK 2.00](https://www.cog-genomics.org/plink/2.0/)
-    - [GCTA 1.94.1](https://yanglab.westlake.edu.cn/software/gcta/#Download)
-    - [Python/Conda 3.6](https://www.anaconda.com/products/individual)
-    - [LDSC 1.0.1](https://github.com/bulik/ldsc)
+-   Path to tools other than R:
 
-- Path to downloaded data sets used throughout the analyses:
+    -   [PLINK 2.00](https://www.cog-genomics.org/plink/2.0/)
+    -   [GCTA 1.94.1](https://yanglab.westlake.edu.cn/software/gcta/#Download)
 
-    - [1000 Genomes Phase 3 EUR data](https://www.internationalgenome.org/data-portal/data-collection/phase-3)
-    - [GTEx v8 data](https://gtexportal.org/home/protectedDataAccess)
-    - [Sex-stratified summary statistics for lipids](http://csg.sph.umich.edu/willer/public/glgc-lipids2021/), publication: [Kanoni et al.](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-022-02837-1)
-    - [Summary statistics for coronary artery disease](https://data.mendeley.com/datasets/gbbsrpx6bs/1), publication: [van der Harst et al.](https://www.ahajournals.org/doi/10.1161/CIRCRESAHA.117.312086)
-    - [Summary statistics for total bilirubin levels](http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90019001-GCST90020000/GCST90019521/), publication: [Sinnott-Armstrong et al.](https://pubmed.ncbi.nlm.nih.gov/33462484/)
-    - [Summary statistics for sleep duration](http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST007001-GCST008000/GCST007561/), publication: [Dashti et al.](https://pubmed.ncbi.nlm.nih.gov/30846698/)
-    - [Summary statistics for systolic blood pressure](http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018972/), publication: [Sakaue et al.](https://pubmed.ncbi.nlm.nih.gov/34594039/)
-    - [Summary statistics for pulse pressure](http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018970/), publication: [Sakaue et al.](https://pubmed.ncbi.nlm.nih.gov/34594039/)
-    - [Summary statistics for medication use (agents acting on the renin-angiotensin system)](http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018988/), publication: [Sakaue et al.](https://pubmed.ncbi.nlm.nih.gov/34594039/)
- 
-## Scripts 
+-   Path to downloaded data sets used throughout the analyses:
 
-R scripts staring with _0x_:
+    -   [1000 Genomes Phase 3 EUR data](https://www.internationalgenome.org/data-portal/data-collection/phase-3)
+    -   [GTEx v8 data](https://gtexportal.org/home/protectedDataAccess)
+    -   [GTEx v8 data - sex stratified](https://gtexportal.org/home/protectedDataAccess)
+    -   [Summary statistics for lipid - sex-stratified](http://csg.sph.umich.edu/willer/public/glgc-lipids2021/), publication: [Kanoni et al. (2022)](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-022-02837-1)
+    -   [Summary statistics for lipids - sex-combined](http://csg.sph.umich.edu/willer/public/glgc-lipids2021/), publication: [Graham et al. (2021)](https://www.nature.com/articles/s41586-021-04064-3)
+    -   [Summary statistics for coronary artery disease](https://data.mendeley.com/datasets/gbbsrpx6bs/1), publication: [van der Harst et al. (2018)](https://www.ahajournals.org/doi/10.1161/CIRCRESAHA.117.312086)
+    -   [Summary statistics for sleep duration](http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST007001-GCST008000/GCST007561/), publication: [Dashti et al. (2019)](https://pubmed.ncbi.nlm.nih.gov/30846698/)
 
-1. Get summary statistics as uploaded to zenodo (**documentary**, uses GWAS pipeline output, you will not need to rerun this when you downloaded the zenodo data)
-2. Define associated loci 
-3. Fine-mapping
-    1. GCTA conditional joint analyses
-    2. Credible Sets
-4. Interaction Tests
-5. Co-localization
-    1. Preparation of data
-    2. Run within PCSK9 data
-    3. Run against eQTLs
-    4. Run against other GWAS traits
-6. LD Score regression
-7. Mendelian Randomization
-    1. Direction 1: PCSK9 on LDL-C
-    2. Direction 2: LDL-C on PCSK9
-    
+## Scripts
+
+R scripts staring with *0x*:
+
+1.  Get summary statistics as uploaded to zenodo (**documentary**, uses GWAS pipeline output, you will not need to rerun this when you downloaded the zenodo data)
+2.  Define associated loci
+3.  Fine-mapping of *PCSK9* locus (GCTA conditional joint analyses)
+4.  Interaction Tests
+5.  Co-localization
+    1.  Preparation of data
+    2.  Run within PCSK9 data
+    3.  Run against eQTLs
+    4.  Run against other GWAS traits
+6.  Mendelian Randomization
+    1.  Preparation of UKBB data (GWAS for stratified LDLC)
+    2.  PCSK9 on LDL-C using UKBB data for LDLC summary statistics
+    3.  PCSK9 on LDL-C using GLGC data
+7.  Look-up of sex-biased gene expression and sex-biased eQTLs
+
 ## Main Figures
 
-R scripts staring with _MF_:
+R scripts staring with *MF*:
 
-1. Interaction plot of 3-way interaction
-2. Heatmap of independent SNPs at _PCSK9_ gene loci
-3. Co-localization plot at _PCSK9_ gene loci (eQTLs + lipids + CAD)
-4. Co-localization plot at other associated loci with lipids
+1.  Heatmap of independent SNPs at *PCSK9* gene loci
+2.  Interaction scatter plot of SNP estimates
+3.  Forest plot of causal estimates per subgroup
+4.  Interaction scatter plot of causal estimates
 
 ## Main Tables
 
-R scripts staring with _MT_:
+R scripts staring with *MT*:
 
-1. Summary of PCSK9 variants
-2. Summary of other associated loci
-3. Bidirectional Mendelian Randomization
+1.  Summary of independent SNPs in the PCSK9 GWAS
+2.  Results of the SNP interaction analysis
+3.  Results of the MR analysis
+4.  Results of the MR interaction analysis
 
 ## Supplemental Tables
 
-R script staring with _ST_:
+R script staring with *ST*:
 
-1. Description of Studies (as received from participating studies) **--> not included here**
-2. Sample Sizes, SNP Numbers, genomic inflation factor $\lambda$, and LDSC heritability results per phenotype
-3. Overview of independent loci
-4. Interaction analyses for associated SNPs
-5. Genetic correlation
-6. Step80: summary of all SNPs with at least p<1e-6 in one trait 
-   a. toploci
-   b. GWAS Catalog annotation
-   c. eQTL annotation
-   d. Gene annotation
-7. Step80: CS 99 annotation for PCSK9 locus only!
-8. Coloc results
-   a. males vs females and statin vs no statin (including cond stats for PCSK9 locus)
-   b. PCSK9 vs eQTLs (including cond stats for PCSK9 locus)
-   c. PCSK9 vs lipids / other traits
-9. MR: Bidirectional results of PCSK9 <--> LDLC (sex-strat) (allele scores?)
-
+1.  Description of Studies (as received from participating studies) **--\> not included here**
+2.  Sample Sizes, SNP Numbers, genomic inflation factor $\lambda$, and LDSC heritability results per phenotype
+3.  Overview of associated loci
+4.  Annotation of associated SNPs
+5.  GCTA COJO results
+6.  Interaction results
+7.  Colocalization results
+8.  Mendelian Randomozation results
