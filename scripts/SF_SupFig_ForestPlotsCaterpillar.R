@@ -13,12 +13,7 @@
 #'
 #' # Introduction ####
 #' ***
-#' Forest plots for all loci:
-#' 
-#' * PCSK9: 
-#'    * 3 SNPs with all subgroups
-#' * interaction hit lead SNPs:
-#'    * 7 SNPs with four double stratified subgroups / all subgroups
+#' Forest plots for PCSK9 locus (all four SNPs)
 #' 
 #' # Initialize ####
 #' ***
@@ -26,131 +21,66 @@ rm(list = ls())
 time0 = Sys.time()
 
 source("../SourceFile_angmar.R")
-source("../helperFunctions/plotForest3.R")
-source("../helperFunctions/plotForest4.R")
 
 setwd(paste0(projectpath_main,"scripts/"))
 
 #' # Load data ####
 #' ***
-load("../results/05_GCTA_COJO.RData")
+load("../temp/04_IATest_input.RData")
+myTab = copy(result.2)
+#myTab = myTab[candidateGene == "PCSK9",]
 
-ToDoList = copy(IndepSignals)
-ToDoList = ToDoList[,c(1:3,26,22:25,21,15)]
-ToDoList = ToDoList[!duplicated(SNP),]
-ToDoList
+myTab[grepl("rs693",markername),beta:= beta*(-1)]
 
-load("../results/03_InteractionTests_2way.RData")
-IATab_2way = IATab_2way[markername %in% ToDoList$SNP,]
+myTab[,lowerCI95 := beta-1.96*SE]
+myTab[,upperCI95 := beta+1.96*SE]
+myTab[,dumID := gsub("PCSK9_","",phenotype)]
+myTab[,dumID := gsub("_"," ",dumID)]
+setorder(myTab, beta)
 
-load("../results/03_InteractionTests_3way.RData")
-IATab_3way = IATab_3way[markername %in% ToDoList$SNP,]
+tag = format(Sys.time(), "%Y-%m-%d")
+tag2 = gsub("2023-","23-",tag)
+tag2 = gsub("-","",tag2)
 
-SigIAGenes = IATab_2way[IA_hierarch_fdr5proz == T, unique(candidateGene)]
+mySNPs = unique(myTab$rsID)
 
-ToDoList = ToDoList[candidateGene %in% c(SigIAGenes,"PCSK9"),]
-ToDoList = ToDoList[SNP != "rs553741:55520408:G:C",]
-
-myTab<-fread("../../2210_GWAMA/06_Annotation/results/synopsis/topliste_tabdelim/step80_meta_singlestudyresults_2023-01-26_PCSK9_sex_strat_v2.txt")
-myTab<-myTab[markername %in% ToDoList$SNP,]
-setorder(myTab,chr,pos)
-myNames = names(myTab)[c(1:16,53:55,58)]
-myNames
-
-colsOut<-setdiff(colnames(myTab),myNames)
-myTab[,get("colsOut"):=NULL]
-dim(myTab)
-
-myTab[,table(pheno)]
-myTab[,phenotype := gsub("PCSK9_","",pheno)]
-myTab[,phenotype := gsub("females_","F - ",phenotype)]
-myTab[,phenotype := gsub("males_","M - ",phenotype)]
-myTab[,phenotype := gsub("females","F - comb",phenotype)]
-myTab[,phenotype := gsub("males","M - comb",phenotype)]
-myTab[!grepl("-",phenotype),phenotype := paste0("A - ",phenotype)]
-myTab[,table(phenotype)]
-
-
-#' # Plot PCSK9 SNPs ####
-#' ***
-tiff(filename = "../figures/SupplementalFigure_ForestPlots_Caterpillar_PCSK9_combined.tiff", 
-     width = 1400, height = 1400, res = 200, compression = 'lzw')
-
-par(mfrow=c(1,1))
-plotForest4(mysnpstats = ToDoList[1,],data = myTab[chr==1])
-dev.off()
-
-tiff(filename = "../figures/SupplementalFigure_ForestPlots_Caterpillar_PCSK9_perSNP.tiff", 
-     width = 1000, height = 1350, res = 200, compression = 'lzw')
-
-par(mfrow=c(3,1))
-plotForest3(mysnpstats = ToDoList[1,],data = myTab)
-plotForest3(mysnpstats = ToDoList[2,],data = myTab)
-plotForest3(mysnpstats = ToDoList[3,],data = myTab)
-dev.off()
-
-#' # Plot interaction Hits ####
-#' ***
-#' I group the 7 SNPs like mentioned in the paper:
-#' 
-#' * female-specific & treatment-specific: MACROD2, SLCO1B3, FOSL2, and KHDRBS2
-#' * multiple interactions: SASH1, PRKAG2, and gene desert
-#' 
-#' ## Round 1: all 8 subgroups ####
-tiff(filename = "../figures/SupplementalFigure_ForestPlots_Caterpillar_2wayIA.tiff", 
-     width = 1000, height = 1800, res = 200, compression = 'lzw')
-
-par(mfrow=c(4,1))
-
-plotForest3(mysnpstats = ToDoList[10,],data = myTab)
-plotForest3(mysnpstats = ToDoList[8,],data = myTab)
-plotForest3(mysnpstats = ToDoList[4,],data = myTab)
-plotForest3(mysnpstats = ToDoList[5,],data = myTab)
-
-dev.off()
-
-tiff(filename = "../figures/SupplementalFigure_ForestPlots_Caterpillar_3wayIA.tiff", 
-     width = 1000, height = 1350, res = 200, compression = 'lzw')
-
-par(mfrow=c(3,1))
-
-plotForest3(mysnpstats = ToDoList[6,],data = myTab)
-plotForest3(mysnpstats = ToDoList[7,],data = myTab)
-plotForest3(mysnpstats = ToDoList[9,],data = myTab)
-
-dev.off()
-
-#' ## Round 2: 4 double-stratified subgroups ####
-
-uniquePhenos = myTab[,unique(phenotype)]
-relPhenos = uniquePhenos[!grepl("A - ",uniquePhenos)]
-relPhenos = relPhenos[!grepl("- comb",relPhenos)]
-relPhenos
-
-tiff(filename = "../figures/SupplementalFigure_ForestPlots_Caterpillar_2wayIA_filt.tiff", 
-     width = 1000, height = 1350, res = 200, compression = 'lzw')
-
-par(mfrow=c(4,1))
-
-plotForest3(mysnpstats = ToDoList[10,],data = myTab[phenotype %in% relPhenos])
-plotForest3(mysnpstats = ToDoList[8,],data = myTab[phenotype %in% relPhenos])
-plotForest3(mysnpstats = ToDoList[4,],data = myTab[phenotype %in% relPhenos])
-plotForest3(mysnpstats = ToDoList[5,],data = myTab[phenotype %in% relPhenos])
-
-dev.off()
-
-tiff(filename = "../figures/SupplementalFigure_ForestPlots_Caterpillar_3wayIA_filt.tiff", 
-     width = 1000, height = 1000, res = 200, compression = 'lzw')
-
-par(mfrow=c(3,1))
-
-plotForest3(mysnpstats = ToDoList[6,],data = myTab[phenotype %in% relPhenos])
-plotForest3(mysnpstats = ToDoList[7,],data = myTab[phenotype %in% relPhenos])
-plotForest3(mysnpstats = ToDoList[9,],data = myTab[phenotype %in% relPhenos])
-
-dev.off()
-
-
+for(i in 1:length(mySNPs)){
+  #i=1
+  message("Working on phenotype ",mySNPs[i])
+  myTab_filt = copy(myTab)
+  myTab_filt = myTab_filt[rsID == mySNPs[i]]
+  myGene = unique(myTab_filt[,candidateGene])
+  if(myGene == "NOS1") myGene = "KSR2"
+  
+  filename1 = paste0("../figures/SupplementalFigure5_ForestPlots_",myGene,"_",mySNPs[i],"_",tag2,".tiff")
+  xmin = min(c(0,myTab_filt$lowerCI95, myTab_filt$upperCI95), na.rm = T)
+  xmax = max(c(0,myTab_filt$lowerCI95, myTab_filt$upperCI95), na.rm = T)
+  xrange = xmax - xmin
+  xmin_margin = xmin - 0.5*xrange
+  xmax_margin = xmax + 0.5*xrange
+  
+  tiff(filename = filename1,
+       width = 2400, height = 1200, res=250, compression = 'lzw')
+  par(mar=c(5,6,0,4))
+  par(font=1)
+  dets = forest(x=myTab_filt[,beta], 
+                sei = myTab_filt[,SE],
+                xlab=paste0(myGene," - ",mySNPs[i]),
+                showweights=F, 
+                slab = myTab_filt[,dumID],
+                ylim = c(-0, nrow(myTab_filt)+3) , 
+                cex =1, 
+                xlim = c(xmin_margin, xmax_margin), 
+                alim = c(xmin, xmax))
+  par(font=4)
+  text(min(dets$xlim), max(dets$ylim-1.5), "Subgroups", pos=4)
+  text(max(dets$xlim), max(dets$ylim-1.5), "             beta estimate (95% CI)", pos=2)
+  
+  dev.off()
+  
+  
+  
+}
 
 #' # Sessioninfo ####
 #' ***

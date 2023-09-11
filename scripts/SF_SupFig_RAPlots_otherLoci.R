@@ -1,6 +1,6 @@
 #' ---
 #' title: "Supplemental Figures: Regional Association Plots (2)"
-#' subtitle: "PCSK9 GWAMA sex-stratified"
+#' subtitle: "PCSK9 GWAMA stratified"
 #' author: "Janne Pott"
 #' date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
 #' output:
@@ -23,17 +23,17 @@
 time0 = Sys.time()
 
 source("../SourceFile_angmar.R")
-source(paste0(basicpath,"/07_programme/rtools/1404_regional_assoc_plot_WO_broad/RegAssocPlot_hg19_EnsemblGenes_noBROAD_9.10_variablegengroesse.R"))
+source(path_RAPlot_function)
 
 setwd(paste0(projectpath_main,"scripts/"))
 
 #' # Load data ####
 #' ***
-load("../results/05_GCTA_COJO.RData")
+load("../results/03_GCTA_COJO.RData")
 IndepSignals = IndepSignals[candidateGene!="PCSK9",]
 IndepSignals[,dumID := paste(candidateGene,pheno,sep="_")]
 
-load("../temp/06_GWAS_allLoci.RData")
+load("../temp/05_GWAS_allLoci.RData")
 erg = copy(data_GWAS)
 erg = erg[candidateGene != "PCSK9"]
 erg = erg[!is.na(pval)]
@@ -42,15 +42,14 @@ erg = erg[,c(1:4,6,10:12,16,17)]
 erg[,dumID := paste(candidateGene,phenotype,sep="_")]
 erg = erg[dumID %in% IndepSignals$dumID]
 erg[,table(phenotype,candidateGene)]
-erg[candidateGene == "gene desert",candidateGene := "geneDesert"]
 setorder(erg,pval)
 
+erg = erg[markername != "12:21117156:GAA:GA",]
 todofile = erg[, .SD[1], by=candidateGene]
 todofile[,gene := candidateGene]
-todofile[,lipids := c(T,T,F,F,T,F,T,F,F,T,T,F)]
-todofile[,cyto := c("2p24.1","19p13.11","6q11.1","6q24.3","2p23.2","18q23",
-                    "10q21.3","2p24.3","7q36.1","12p12.2","12q24.22","20p12.1")]
-
+todofile[,lipids := c(T,T,T,F,F, F,T,T,F,F)]
+todofile[,cyto := c("2p24.1","19p13.11","11q12.2","12q24.22","6q11.1","10q11.21",
+                    "16q22.2","10q21.3","12p12.2","7q36.1")]
 todofile[,rsID := gsub(":.*","",markername)]
 todofile[,region := 250]
 todofile[,resultdir := paste0("../temp/input_RA_otherLoci/",gene)]  
@@ -64,13 +63,23 @@ todofile
 #' * PDF 1: lipid loci
 #' * PDF 2: other loci
 #' 
-pdf("../figures/SupplementalFigure_RAPlots_otherLoci.pdf",8,12)
+filename1 = "../figures/SupplementalFigure_RAPlots_lipidLoci.pdf"
+filename2 = "../figures/SupplementalFigure_RAPlots_otherLoci.pdf"
+
+todofile1 = copy(todofile)
+todofile1 = todofile1[lipids == T,]
+
+todofile2 = copy(todofile)
+todofile2 = todofile2[lipids == F,]
+
+#' ## Lipid loci ####
+pdf(filename1,8,12)
 par(mfrow=c(3,2))
 
-dumTab<-foreach(i = 1:dim(todofile)[1])%do%{
-  #i=7
-  message("Working on candidate gene ",todofile$candidateGene[i])
-  myRow<-todofile[i,]
+dumTab<-foreach(i = 1:dim(todofile1)[1])%do%{
+  #i=5
+  message("Working on candidate gene ",todofile1$candidateGene[i])
+  myRow<-todofile1[i,]
   
   # prep data
   myDat = copy(erg)
@@ -96,24 +105,24 @@ dumTab<-foreach(i = 1:dim(todofile)[1])%do%{
   mainText=gsub(myRow$rsID,"",mainText )
   mainText=gsub("_"," ",mainText )
   #par(mfrow=c(1,1))
+  dummy2 = input$myGenes
+  dummy2 = dummy2[dummy2$biotype=="protein_coding",]
+  input$myGenes = dummy2
   
-  if(i %nin% c(2,4,5,7,10)){
+  if(i %in% c(1,4,5)){
     customASplot_woBROAD(locus = input$myLocus,
                          lead_snp = input$leadsnp, 
                          map = input$myMap,
                          genes = input$myGenes,
                          center_lead_snp = F,
-                         dolegend = T,
+                         dolegend = F,
                          legendpos = "topleft",
                          shownregion_kb = myRow$region,
                          maintitle = mainText,
                          subtitle = subText,
                          weakR2 = 0.1,
-                         cex_genname=1, title_size=1.5, subtitle_size = 0.8)
+                         cex_genname=0.6, title_size=1.5, subtitle_size = 0.8)
   }else if(i == 2){
-    dummy2 = input$myGenes
-    dummy2 = dummy2[dummy2$biotype=="protein_coding",]
-    input$myGenes = dummy2
     dummy = input$myLocus
     dummy = dummy[dummy$POS<=19843906,]
     dummy = dummy[dummy$POS>=19179794,]
@@ -123,7 +132,7 @@ dumTab<-foreach(i = 1:dim(todofile)[1])%do%{
                          map = input$myMap,
                          genes = input$myGenes,
                          center_lead_snp = F,
-                         dolegend = T,
+                         dolegend = F,
                          legendpos = "topleft",
                          #shownregion_kb = myRow$region,
                          #shownregion_kb = 400,
@@ -131,19 +140,17 @@ dumTab<-foreach(i = 1:dim(todofile)[1])%do%{
                          subtitle = subText,
                          weakR2 = 0.1,
                          cex_genname=0.4, title_size=1.5, subtitle_size = 0.8)
-  }else if(i == 4){
-    dummy2 = input$myGenes
-    dummy2 = dummy2[dummy2$biotype=="protein_coding",]
-    input$myGenes = dummy2
+  }else if(i == 3){
     dummy = input$myLocus
-    dummy = dummy[dummy$POS<=65521463,]
+    dummy = dummy[dummy$POS>=61426711,]
+    dummy = dummy[dummy$POS<=61686500,]
     input$myLocus = dummy
     customASplot_woBROAD(locus = input$myLocus,
                          lead_snp = input$leadsnp, 
                          map = input$myMap,
                          genes = input$myGenes,
                          center_lead_snp = F,
-                         dolegend = T,
+                         dolegend = F,
                          legendpos = "topleft",
                          #shownregion_kb = myRow$region,
                          #shownregion_kb = 400,
@@ -151,70 +158,64 @@ dumTab<-foreach(i = 1:dim(todofile)[1])%do%{
                          subtitle = subText,
                          weakR2 = 0.1,
                          cex_genname=0.6, title_size=1.5, subtitle_size = 0.8)
-  }else if(i == 5){
-    # dummy2 = input$myGenes
-    # dummy2 = dummy2[dummy2$biotype=="protein_coding",]
-    # input$myGenes = dummy2
-    dummy = input$myLocus
-    dummy = dummy[dummy$POS>=20829710,]
-    input$myLocus = dummy
-    customASplot_woBROAD(locus = input$myLocus,
-                         lead_snp = input$leadsnp, 
-                         map = input$myMap,
-                         genes = input$myGenes,
-                         center_lead_snp = F,
-                         dolegend = T,
-                         legendpos = "topleft",
-                         #shownregion_kb = myRow$region,
-                         #shownregion_kb = 400,
-                         maintitle = mainText,
-                         subtitle = subText,
-                         weakR2 = 0.1,
-                         cex_genname=0.6, title_size=1.5, subtitle_size = 0.8)
-  }else if(i == 7){
-    # dummy2 = input$myGenes
-    # dummy2 = dummy2[dummy2$biotype=="protein_coding",]
-    # input$myGenes = dummy2
-    # dummy = input$myLocus
-    # dummy = dummy[dummy$POS>=20829710,]
-    # input$myLocus = dummy
-    customASplot_woBROAD(locus = input$myLocus,
-                         lead_snp = input$leadsnp, 
-                         map = input$myMap,
-                         genes = input$myGenes,
-                         center_lead_snp = F,
-                         dolegend = T,
-                         legendpos = "topleft",
-                         #shownregion_kb = myRow$region,
-                         #shownregion_kb = 400,
-                         maintitle = mainText,
-                         subtitle = subText,
-                         weakR2 = 0.1,
-                         cex_genname=0.6, title_size=1.5, subtitle_size = 0.8)
-  }else if(i == 10){
-    dummy2 = input$myGenes
-    dummy2 = dummy2[dummy2$biotype=="protein_coding",]
-    input$myGenes = dummy2
-    # dummy = input$myLocus
-    # dummy = dummy[dummy$POS>=20829710,]
-    # input$myLocus = dummy
-    customASplot_woBROAD(locus = input$myLocus,
-                         lead_snp = input$leadsnp, 
-                         map = input$myMap,
-                         genes = input$myGenes,
-                         center_lead_snp = F,
-                         dolegend = T,
-                         legendpos = "topleft",
-                         shownregion_kb = myRow$region,
-                         maintitle = mainText,
-                         subtitle = subText,
-                         weakR2 = 0.1,
-                         cex_genname=1, title_size=1.5, subtitle_size = 0.8)
   }
-
 }
 dev.off()
 
+
+#' ## Other loci ####
+pdf(filename2,8,12)
+par(mfrow=c(3,2))
+
+dumTab<-foreach(i = 1:dim(todofile2)[1])%do%{
+  #i=5
+  message("Working on candidate gene ",todofile2$candidateGene[i])
+  myRow<-todofile2[i,]
+  
+  # prep data
+  myDat = copy(erg)
+  myDat = myDat[candidateGene == myRow$gene]
+  setnames(myDat,"markername","snp")
+  setnames(myDat,"bp_hg19","position")
+  setnames(myDat,"pval","pvalue")
+  myDat<-myDat[!is.na(myDat$pvalue),]
+  
+  # create input
+  input = createInputfilesRegAssocPlot1kg19Ensembl(myDat, 
+                                                   doplink=T, 
+                                                   r_on_server = T,
+                                                   gene_validation_level = c("KNOWN"),
+                                                   path_ldreference = path_1000Genomes, 
+                                                   path_ldreference_snps = path_1000Genomes_snps_fn,
+                                                   leadsnp = myRow$markername,
+                                                   resultdir = myRow$resultdir)
+  
+  # plotting
+  subText=paste0(myRow$rsID," (MAF: ",round(myRow$maf,3),")")
+  mainText=gsub("PCSK9_","",myRow$phenotype )
+  mainText=gsub(myRow$rsID,"",mainText )
+  mainText=gsub("_"," ",mainText )
+  #par(mfrow=c(1,1))
+  dummy2 = input$myGenes
+  dummy2 = dummy2[dummy2$biotype=="protein_coding",]
+  input$myGenes = dummy2
+  
+  customASplot_woBROAD(locus = input$myLocus,
+                       lead_snp = input$leadsnp, 
+                       map = input$myMap,
+                       genes = input$myGenes,
+                       center_lead_snp = F,
+                       dolegend = F,
+                       legendpos = "topleft",
+                       shownregion_kb = myRow$region,
+                       maintitle = mainText,
+                       subtitle = subText,
+                       weakR2 = 0.1,
+                       cex_genname=0.6, title_size=1.5, subtitle_size = 0.8)
+  
+  
+}
+dev.off()
 
 #' # Session Info ####
 #' ***

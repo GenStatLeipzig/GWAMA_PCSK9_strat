@@ -13,85 +13,50 @@
 #'
 #' # Introduction ####
 #' ***
-#' RA plots for PCSK9 locus for all 7 traits in their conditional settings 
-#' 
-#' * page 1: females, females free, free
-#' * page 2: males, males free, males treated, treated
-#' 
+#' RA plots for PCSK9 locus for all 8 traits in their unconditional settings 
+#'  
 #' # Initialize ####
 #' ***
 time0 = Sys.time()
 
 source("../SourceFile_angmar.R")
-source(paste0(basicpath,"/07_programme/rtools/1404_regional_assoc_plot_WO_broad/RegAssocPlot_hg19_EnsemblGenes_noBROAD_9.10_variablegengroesse.R"))
+source(path_RAPlot_function)
 
 setwd(paste0(projectpath_main,"scripts/"))
 
 #' # Load data ####
 #' ***
-load("../results/05_GCTA_COJO.RData")
+load("../results/03_GCTA_COJO.RData")
 IndepSignals = IndepSignals[candidateGene=="PCSK9",]
 IndepSignals
 
-dumTab = foreach(i = 1:dim(IndepSignals)[1])%do%{
-  #i=1
-  myRow = copy(IndepSignals)
-  myRow = myRow[i,]
-  message("Working on ",myRow$pheno," with signal ",myRow$SNP)
-  
-  erg1 = fread(myRow$input_CS)
-  
-  if(myRow$multipleSignals==T){
-    rsID = gsub(":.*","",myRow$SNP)
-    erg1[,phenotype := paste(myRow$pheno,rsID,sep="_")]
-    setnames(erg1,"SNP","markername")
-    setnames(erg1,"Chr","chr")
-    setnames(erg1,"bp","bp_hg19")
-    setnames(erg1,"refA","EA")
-    setnames(erg1,"freq","EAF")
-    setnames(erg1,"bC","beta")
-    setnames(erg1,"bC_se","SE")
-    setnames(erg1,"pC","pval")
-    erg1 = erg1[!is.na(beta),]
-  }else{
-    erg1 = erg1[invalidAssocs==F,]
-    erg1 = erg1[chr==1 & bp_hg19>= 55505647 - 500000 & bp_hg19<= 55505647 + 500000,] 
-  }
-  
-  erg1
-}
-
-erg = rbindlist(dumTab,use.names=T,fill=T)
-
+load("../temp/05_GWAS_allLoci.RData")
+erg = copy(data_GWAS)
+erg = erg[candidateGene == "PCSK9"]
 erg = erg[!is.na(pval)]
-names(erg)[c(1:5,11:14)]
-erg = erg[,c(1:5,11:14)]
+names(erg)[c(1:4,6,10:12,16,17)]
+erg = erg[,c(1:4,6,10:12,16,17)]
+erg[,table(phenotype,candidateGene)]
 setorder(erg,pval)
+
 todofile = erg[, .SD[1], by=phenotype]
-todofile[,gene := "PCSK9"]
-todofile[,cyto := "1p32.3"]
+todofile[,gene := candidateGene]
+todofile[,cyto := c("1p32.3")]
 todofile[,rsID := gsub(":.*","",markername)]
 todofile[,region := 250]
 todofile[,resultdir := paste0("../temp/input_RA_PCSK9/",phenotype)]  
-todofile[,resultdir := gsub("PCSK9_","",resultdir)]  
 todofile[,maf := EAF]  
 todofile[EAF>0.5,maf := 1-EAF]  
-setorder(todofile,phenotype)
-todofile
+todofile = todofile[c(1,6,2,4,3,5,7,8),]
 
 #' # RA Plotting ####
 #' ***
-#' * PDF 1: females free, females, free (3x2 in typical PDF format)
-#' * PDF 2: males free, males, males treated, treated (3x2 in typical PDF format)
-#' 
-uniqueSNPs = unique(todofile$markername)
-todofile[,otherSignals := uniqueSNPs[c(4,4,4,4,4,4,4,4,4,4,3,4)]]
 
 pdf("../figures/SupplementalFigure_RAPlots_PCSK9.pdf",8,12)
 par(mfrow=c(3,2))
 
 dumTab<-foreach(i = 1:dim(todofile)[1])%do%{
-  #i=11
+  #i=1
   message("Working on phenotype ",todofile$phenotype[i])
   myRow<-todofile[i,]
   
@@ -122,13 +87,19 @@ dumTab<-foreach(i = 1:dim(todofile)[1])%do%{
   
   dummy = input$myLocus
   dummy = dummy[dummy$POS>=55443166,]
+  dummy = dummy[dummy$POS<=55599526,]
   input$myLocus = dummy
+  
+  dummy2 = input$myGenes
+  dummy2 = dummy2[dummy2$biotype=="protein_coding",]
+  input$myGenes = dummy2
+  
   customASplot_woBROAD(locus = input$myLocus,
                        lead_snp = input$leadsnp, 
                        map = input$myMap,
                        genes = input$myGenes,
                        center_lead_snp = F,
-                       dolegend = T,
+                       dolegend = F,
                        legendpos = "topright",
                        shownregion_kb = myRow$region,
                        #shownregion_kb = 250,
@@ -137,8 +108,10 @@ dumTab<-foreach(i = 1:dim(todofile)[1])%do%{
                        weakR2 = 0.1,
                        cex_genname=1, title_size=1.5, subtitle_size = 0.8)
   
-  points(myDat$position[myDat$snp %in% myRow$otherSignals], 
-         -log10(myDat$pvalue)[myDat$snp %in% myRow$otherSignals], 
+  Indep2 = copy(IndepSignals)
+  Indep2 = Indep2[pheno == myRow$phenotype,]
+  Indep2 = Indep2[SNP != myRow$markername,]
+  points(Indep2$bp,-log10(Indep2$p), 
          pch=21,cex=2.5,lwd=3, col="red")
   
 }

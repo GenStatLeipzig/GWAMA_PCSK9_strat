@@ -73,7 +73,7 @@ source("../SourceFile_angmar.R")
 #' 
 #' 
 {
-  tab2 = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/step15_snp_statistics_incl_lambdas.txt")
+  tab2 = fread(paste0(path_GenStatPipeline,"synopsis/step15_snp_statistics_incl_lambdas.txt"))
   tab2 = tab2[,c(1,9,11:14)]
   names(tab2) = c("phenotype","nSNPs","nStudies_max","nSamples_min","nSamples_max","LambdaGC_all")
   
@@ -131,7 +131,7 @@ source("../SourceFile_angmar.R")
 #' tab4_d: Nearby genes (only for independent signals)
 
 {
-  tab4a = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/topliste_2023-07-26_PCSK9_strat.txt")
+  tab4a = fread(paste0(path_GenStatPipeline,"synopsis/topliste_tabdelim/topliste_2023-07-26_PCSK9_strat.txt"))
   
   # check valid loci
   invalidSNPs = tab3[NR_SNPs <2,markername]
@@ -186,7 +186,7 @@ source("../SourceFile_angmar.R")
 }
 
 {
-  tab4b = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/gwasinfo_2023-07-26_PCSK9_strat.txt")
+  tab4b = fread(paste0(path_GenStatPipeline,"/synopsis/topliste_tabdelim/gwasinfo_2023-07-26_PCSK9_strat.txt"))
   names(tab4b)
   tab4b = tab4b[snps %in% tab3[NR_SNPs>2,markername]]
   length(unique(tab4b$pmid_gwas))
@@ -213,7 +213,7 @@ source("../SourceFile_angmar.R")
 }
 
 {
-  tab4c = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/eqtlinfo_2023-07-26_PCSK9_strat.txt")
+  tab4c = fread(paste0(path_GenStatPipeline,"synopsis/topliste_tabdelim/eqtlinfo_2023-07-26_PCSK9_strat.txt"))
   names(tab4c)
   tab4c = tab4c[snps %in% tab3[NR_SNPs>2,markername]]
   length(unique(tab4c$PMID_study))
@@ -247,7 +247,7 @@ source("../SourceFile_angmar.R")
 }
 
 {
-  tab4d = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/proximate_genes_2023-07-26_PCSK9_strat.txt")
+  tab4d = fread(paste0(path_GenStatPipeline,"synopsis/topliste_tabdelim/proximate_genes_2023-07-26_PCSK9_strat.txt"))
   names(tab4d)
   tab4d = tab4d[markername %in% tab3[NR_SNPs>2,markername]]
   length(unique(tab4d$genename))
@@ -278,20 +278,20 @@ source("../SourceFile_angmar.R")
 #' ***
 #' GCTA COJO results
 {
-  load("../results/03_GCTA_COJO.RData")
-  tab5 = copy(IndepSignals)
-  names(tab5)
-  tab5 = tab5[,c(15,21,26,2,1,3:14)]
+  load("../results/03_GCTA_COJO_slct.RData")
+  tab5a = copy(SLCTtab)
+  names(tab5a)
+  tab5a = tab5a[,c(15,26,3,21:25,6:14)]
   
-  tab5_annot = data.table(column = names(tab5),
+  tab5a_annot = data.table(column = names(tab5a),
                           description = c("Analyzed subgroup (multiple columns per subgroup and locus possible)",
-                                          "Candidate gene",
                                           "RS ID of independent signal",
-                                          "SNP ID of independent signal",
-                                          "Chromosome number",
                                           "Base position (hg19)",
                                           "Effect allele",
+                                          "Other allele",
                                           "Effect allele frequency",
+                                          "Imputation info score",
+                                          "I^2 heterogeneity",
                                           "Beta estimate of SNP in GWAMA",
                                           "Standard error of SNP effect in GWAMA",
                                           "Association p-value of SNP in GWAMA",
@@ -302,9 +302,76 @@ source("../SourceFile_angmar.R")
                                           "P-value from joint analysis",
                                           "LD correlation between the SNP i and SNP i + 1 for the SNPs on the list per subgroup"))
   
+  load("../results/03_GCTA_COJO_joint.RData")
+  tab5b = copy(JOINTtab)
+  names(tab5b)
+  tab5b = tab5b[,c(15,2:8,16,17,9:13,18,19,14)]
+  
+  tab5b_annot = data.table(column = names(tab5b),
+                           description = c("Analyzed subgroup (multiple columns per subgroup and locus possible)",
+                                           "SNP ID of independent signal",
+                                           "Base position (hg19)",
+                                           "Effect allele",
+                                           "Effect allele frequency",
+                                           "Beta estimate of SNP in GWAMA",
+                                           "Standard error of SNP effect in GWAMA",
+                                           "Association p-value of SNP in GWAMA",
+                                           "T statistic in GWAMA",
+                                           "F statistic in GWAMA",
+                                           "Estimated effective sample size",
+                                           "Frequency of the effect allele in LIFE",
+                                           "Effect size from joint analysis",
+                                           "Standard error from joint analysis",
+                                           "P-value from joint analysis",
+                                           "T statistic in joint analysis",
+                                           "F statistic in joint analysis",
+                                           "LD correlation between the SNP i and SNP i + 1 for the SNPs on the list per subgroup"))
+  
+  
 }
 
 #' # Get Sup Tab 6 ####
+#' ***
+#' Interaction test results
+#' 
+{
+  loaded1 = load("../results/04_IATest_2way_complete.RData")
+  tab6a = copy(IATab)
+  loaded2 = load("../results/04_IATest_PCSK9Special_complete.RData")
+  tab6b = copy(IATab)
+  
+  tab6a[,fix := NULL]
+  tab6b[,fix := NULL]
+  
+  table(names(tab6a)==names(tab6b))
+  myNames = names(tab6a)
+  myNames = myNames[1:20]
+  myNames = gsub("trait1","traitX",myNames)
+  
+  tab6_annot = data.table(column = myNames,
+                          description = c("SNP ID, naming according to 1000 Genomes Phase 3",
+                                          "Chromosome of SNP",
+                                          "Position of SNP in basepairs on the chromosome according to genome build hg19",
+                                          "Effect allele",
+                                          "Other allele",
+                                          "Proposed canidate gene",
+                                          "Best-associated PCSK9 trait",
+                                          "Type of interaction test, either 2-way interaction for sex or statin",
+                                          "Difference of effect estimates: trait2 - trait1.",
+                                          "Standard error of difference, defined as sqaured root of standard errors of all included traits.",
+                                          "Z-Statistic of difference, follow a normal distribution under null hypothesis of no interaction",
+                                          "P-value of difference",
+                                          "Adjusted p-value, using hierarchical FDR correction",
+                                          "TRUE/FALSE indicator for significance after hier. FDR correction",
+                                          "Name of trait X",
+                                          "Effect allele frequency of trait X",
+                                          "Beta estimate of trait X",
+                                          "Standard error of trait X",
+                                          "P-value of effect of trait X",
+                                          "Sample size for trait X"))
+}
+
+#' # Get Sup Tab 7 ####
 #' ***
 #' Co-localization results
 #' 
@@ -327,7 +394,7 @@ source("../SourceFile_angmar.R")
   loaded = load("../results/05_7_coloc_otherGWAScond.RData")
   coloc_otherTraits_cond = get(loaded[1])
   
-  # tab 6 a: tests with eQTLs from GTEx
+  # tab 7 a: tests with eQTLs from GTEx
   names(coloc_eQTLs_uncond)
   names(coloc_eQTLs_cond)
   setnames(coloc_eQTLs_cond,"locus","cytoband")
@@ -335,32 +402,32 @@ source("../SourceFile_angmar.R")
   coloc_eQTLs_cond[,indepSignal := gsub(".*__","",trait1)]
   coloc_eQTLs_cond[,trait1 := gsub("__.*","",trait1)]
   
-  tab6a = rbind(coloc_eQTLs_cond,coloc_eQTLs_uncond,fill=TRUE)
-  setnames(tab6a,"gene","trait2_gene")
-  setnames(tab6a,"trait2","trait2_tissue")
+  tab7a = rbind(coloc_eQTLs_cond,coloc_eQTLs_uncond,fill=TRUE)
+  setnames(tab7a,"gene","trait2_gene")
+  setnames(tab7a,"trait2","trait2_tissue")
 
-  # tab 6 b: tests with other GWAS
+  # tab 7 b: tests with other GWAS
   names(coloc_otherTraits)
   names(coloc_otherTraits_cond)
   coloc_otherTraits_cond[,gene := "PCSK9"]
   
-  tab6b = rbind(coloc_otherTraits_cond,coloc_otherTraits,fill=T)
-  names(tab6b)
-  matched = match(tab6b$gene,tab6a$trait2_gene)
+  tab7b = rbind(coloc_otherTraits_cond,coloc_otherTraits,fill=T)
+  names(tab7b)
+  matched = match(tab7b$gene,tab7a$trait2_gene)
   table(is.na(matched))
-  tab6b[,cytoband:=tab6a[matched,cytoband]]
-  tab6b = tab6b[,c(11,2,10,3:9,1)]
-  setnames(tab6b,"SNP","indepSignal")
+  tab7b[,cytoband:=tab7a[matched,cytoband]]
+  tab7b = tab7b[,c(11,2,10,3:9,1)]
+  setnames(tab7b,"SNP","indepSignal")
   
-  # tab 6 c: tests within our data
+  # tab 7 c: tests within our data
   names(coloc_within_uncond)
   names(coloc_within_cond)
-  matched = match(coloc_within_uncond$gene,tab6a$trait2_gene)
+  matched = match(coloc_within_uncond$gene,tab7a$trait2_gene)
   table(is.na(matched))
-  coloc_within_uncond[,cytoband:=tab6a[matched,cytoband]]
-  matched = match(coloc_within_cond$gene,tab6a$trait2_gene)
+  coloc_within_uncond[,cytoband:=tab7a[matched,cytoband]]
+  matched = match(coloc_within_cond$gene,tab7a$trait2_gene)
   table(is.na(matched))
-  coloc_within_cond[,cytoband:=tab6a[matched,cytoband]]
+  coloc_within_cond[,cytoband:=tab7a[matched,cytoband]]
   coloc_within_cond[,locus := NULL]
   
   coloc_within_uncond[,sex1:=unlist(strsplit(trait1,"_"))[seq(2,78,3)]]
@@ -383,28 +450,28 @@ source("../SourceFile_angmar.R")
   coloc_within_uncond[,statin1:=NULL]
   coloc_within_uncond[,statin2:=NULL]
   
-  tab6c = rbind(coloc_within_cond,coloc_within_uncond,fill=T)
-  tab6c[!grepl("PCSK9",trait1),trait1 := paste0("PCSK9_",trait1)]
-  tab6c[!grepl("PCSK9",trait2),trait2 := paste0("PCSK9_",trait2)]
-  tab6c = tab6c[,c(12,4,3,2,5:11,1)]
-  setnames(tab6c,"SNP","indepSignal")
+  tab7c = rbind(coloc_within_cond,coloc_within_uncond,fill=T)
+  tab7c[!grepl("PCSK9",trait1),trait1 := paste0("PCSK9_",trait1)]
+  tab7c[!grepl("PCSK9",trait2),trait2 := paste0("PCSK9_",trait2)]
+  tab7c = tab7c[,c(12,4,3,2,5:11,1)]
+  setnames(tab7c,"SNP","indepSignal")
   
   # checks
-  names(tab6a)
-  names(tab6b)
-  names(tab6c)
+  names(tab7a)
+  names(tab7b)
+  names(tab7c)
   
   # annotation 
-  myNames = unique(c(names(tab6a),names(tab6b),names(tab6c)))
+  myNames = unique(c(names(tab7a),names(tab7b),names(tab7c)))
   myNames = myNames[c(1,12,2,14,13,3,4,5:11)]
-  tab6_annot = data.table(column = myNames,
+  tab7_annot = data.table(column = myNames,
                           description = c("Genomic cytoband of locus",
                                           "Proposed canidate gene",
                                           "First trait to be tested, always one of our PCSK9 traits",
-                                          "In Table 6c: fixed strata for this test",
-                                          "Second trait to be tested, either one of our PCSK9 traits (Tab 6c) or other GWAS trait (6c)",
-                                          "In Table 6b: Second trait to be tested, respective gene",
-                                          "In Table 6b: Second trait to be tested, respective tissue",
+                                          "In Table 7a: fixed strata for this test",
+                                          "Second trait to be tested, either one of our PCSK9 traits (Tab 7a) or other GWAS trait (7c)",
+                                          "In Table 7b: Second trait to be tested, respective gene",
+                                          "In Table 7b: Second trait to be tested, respective tissue",
                                           "Number of SNPs included in co-localization analysis per test",
                                           "Posterior probability for hypothesis 0: neither trait associated",
                                           "Posterior probability for hypothesis 1: only trait 1 associated",
@@ -415,66 +482,50 @@ source("../SourceFile_angmar.R")
 
 }
 
-#' # Get Sup Tab 7 ####
-#' ***
-#' Interaction test results
-#' 
-{
-  loaded1 = load("../results/04_IATest_complete.RData")
-  tab7a = copy(IATab)
-  loaded2 = load("../results/04_IATest_PCSK9Special_complete.RData")
-  tab7b = copy(IATab)
-  
-  tab7a[,fix := NULL]
-  tab7b[,fix := NULL]
-  
-  table(names(tab7a)==names(tab7b))
-  myNames = names(tab7a)
-  myNames = myNames[1:20]
-  myNames = gsub("trait1","traitX",myNames)
-  
-  tab7_annot = data.table(column = myNames,
-                          description = c("SNP ID, naming according to 1000 Genomes Phase 3",
-                                          "Chromosome of SNP",
-                                          "Position of SNP in basepairs on the chromosome according to genome build hg19",
-                                          "Effect allele",
-                                          "Other allele",
-                                          "Proposed canidate gene",
-                                          "Best-associated PCSK9 trait",
-                                          "Type of interaction test, either 3-way interaction of both sex and statin, or 2-way interaction for sex and statin",
-                                          "Difference of effect estimates. In 3-way interaction: diff = (trait2_beta - trait1_beta) - (trait4_beta - trait3_beta). In 2-way interaction: trait2 - trait1.",
-                                          "Standard error of difference, defined as sqaured root of standard errors of all included traits.",
-                                          "Z-Statistic of difference, follow a normal distribution under null hypothesis of no interaction",
-                                          "P-value of difference",
-                                          "Adjusted p-value, using hierarchical FDR correction",
-                                          "TRUE/FALSE indicator for significance after hier. FDR correction",
-                                          "Name of trait X",
-                                          "Effect allele frequency of trait X",
-                                          "Beta estimate of trait X",
-                                          "Standard error of trait X",
-                                          "P-value of effect of trait X",
-                                          "Sample size for trait X"))
-}
 
 #' # Get Sup Tab 8 ####
 #' ***
 #' Mendelian Randomization results
 {
-  loaded = load(file="../results/06_MRresults.RData")
+  loaded = load(file="../results/06_MR_WaldEstimates_UKBB_230907.RData")
   tab8a = get(loaded)
-  loaded = load(file="../results/06_MR_interaction.RData")
+  loaded = load(file="../results/06_MR_IVWEstimates_UKBB_230907.RData")
   tab8b = get(loaded)
+  loaded = load(file="../results/06_MR_InteractionTest_UKBB_230907.RData")
+  tab8c = get(loaded)
   
   # tab 9a: MR results per SNP
   names(tab8a)
+  tab8a = tab8a[,-c(1,4,18)]
   names(tab8b)
-
+  names(tab8c)
+  tab8c = tab8c[,c(14,15,10:13,2:9)]
+  
   # annotation 
   tab8a_annot = data.table(column = names(tab8a),
+                           description = c("Exposure subgroup used in MR",
+                                           "SNP ID",
+                                           "Base position (hg19)",
+                                           "Effect allele",
+                                           "Effect allele frequency in PCSK9 data",
+                                           "Beta estimate for PCSK9",
+                                           "Standard error for PCSK9",
+                                           "P-value for PCSK9",
+                                           "Sample size for PCSK9",
+                                           "F-statistic for PCSK9",
+                                           "Effect allele frequency in LDLC data",
+                                           "Beta estimate for LDLC",
+                                           "Standard error for LDLC",
+                                           "P-value for LDLC",
+                                           "Sample size for LDLC",
+                                           "Beta estimate of Wald ratio",
+                                           "Standard error of Wald ratio",
+                                           "P-value of Wald ratio"))
+  
+  tab8b_annot = data.table(column = names(tab8b),
                           description = c("Exposure used in MR",
-                                          "Outcome used in MR",
                                           "SNP selection model in MR",
-                                          "Number of SNPs used in the MR according to setting",
+                                          "Outcome used in MR",
                                           "Beta estimate of inverse-variance weighted MR",
                                           "Standard error of 'beta_IVW'",
                                           "P-value of 'beta_IVW'",
@@ -489,19 +540,17 @@ source("../SourceFile_angmar.R")
                                           "Cochrans Q of 'beta_egger'",
                                           "P-value of Cochrans Q in Egger"))
   
-  myNames = names(tab8b)
-  myNames = myNames[1:12]
+  myNames = names(tab8c)
+  myNames = myNames[1:10]
   myNames = gsub("trait1","traitX",myNames)
   
-  tab8b_annot = data.table(column = myNames,
-                          description = c("Type of interaction test, either 3-way interaction of both sex and statin, or 2-way interaction for sex and statin",
-                                          "SNP selection model in MR",
-                                          "Difference of effect estimates. In 3-way interaction: diff = (trait2_beta - trait1_beta) - (trait4_beta - trait3_beta). In 2-way interaction: trait2 - trait1.",
+  tab8c_annot = data.table(column = myNames,
+                          description = c("SNP selection model in MR",
+                                          "Type of interaction test, either 2-way interaction for sex or statin",
+                                          "Difference of effect estimates: trait2 - trait1.",
                                           "Standard error of difference, defined as sqaured root of standard errors of all included traits.",
                                           "Z-Statistic of difference, follow a normal distribution under null hypothesis of no interaction",
                                           "P-value of difference",
-                                          "Adjusted p-value, using hierarchical FDR correction",
-                                          "TRUE/FALSE indicator for significance after hier. FDR correction",
                                           "Name of trait X",
                                           "Beta estimate of trait X",
                                           "Standard error of trait X",
@@ -513,11 +562,15 @@ source("../SourceFile_angmar.R")
 
 #' # Save tables ###
 #' ***
-tosave4 = data.table(data = c("tab0", "tab2","tab3","tab4a","tab4b","tab4c","tab4d","tab5",
-                              "tab6a","tab6b","tab6c","tab7a","tab7b","tab8a","tab8b"), 
-                     SheetNames = c("Content","TableS2","TableS3","TableS4a","TableS4b","TableS4c","TableS4d","TableS5",
-                                    "TableS6a","TableS6b","TableS6c","TableS7a","TableS7b","TableS8a","TableS8b"))
-excel_fn = "../tables/SupplementalTables_230806.xlsx"
+tag = format(Sys.time(), "%Y-%m-%d")
+tag2 = gsub("2023-","23-",tag)
+tag2 = gsub("-","",tag2)
+
+tosave4 = data.table(data = c("tab0", "tab2","tab3","tab4a","tab4b","tab4c","tab4d","tab5a","tab5b",
+                              "tab6a","tab6b","tab7c","tab7a","tab7b","tab8a","tab8b","tab8c"), 
+                     SheetNames = c("Content","TableS2","TableS3","TableS4a","TableS4b","TableS4c","TableS4d","TableS5a","TableS5b",
+                                    "TableS6a","TableS6b","TableS7a","TableS7b","TableS7c","TableS8a","TableS8b","TableS8c"))
+excel_fn = paste0("../tables/SupplementalTables_",tag2,".xlsx")
 WriteXLS(tosave4$data, 
          ExcelFileName=excel_fn, 
          SheetNames=tosave4$SheetNames, 
@@ -526,11 +579,11 @@ WriteXLS(tosave4$data,
          FreezeRow=1)
 
 tosave4 = data.table(data = c("tab2_annot","tab3_annot","tab4a_annot","tab4b_annot","tab4c_annot","tab4d_annot",
-                              "tab5_annot","tab6_annot","tab7_annot","tab8a_annot","tab8b_annot"), 
+                              "tab5a_annot","tab5b_annot","tab6_annot","tab7_annot","tab8a_annot","tab8b_annot","tab8c_annot"), 
                      SheetNames = c("TableS2_annot","TableS3_annot","TableS4a_annot","TableS4b_annot","TableS4c_annot",
-                                    "TableS4d_annot","TableS5_annot","TableS6_annot","TableS7_annot","TableS8a_annot",
-                                    "TableS8b_annot"))
-excel_fn = "../tables/SupplementalTables_Annotation_230806.xlsx"
+                                    "TableS4d_annot","TableS5a_annot","TableS5b_annot","TableS6_annot","TableS7_annot","TableS8a_annot",
+                                    "TableS8b_annot","TableS8c_annot"))
+excel_fn = paste0("../tables/SupplementalTables_Annotation_",tag2,".xlsx")
 WriteXLS(tosave4$data, 
          ExcelFileName=excel_fn, 
          SheetNames=tosave4$SheetNames, 
@@ -538,11 +591,11 @@ WriteXLS(tosave4$data,
          BoldHeaderRow=T,
          FreezeRow=1)
 
-save(tab0, tab2,tab3,tab4a,tab4b,tab4c,tab4d,tab5,tab6a,tab6b,tab6c,tab7a,tab7b,tab8a,tab8b,
-     file = "../tables/SupplementalTables_230806.RData")
-save(tab2_annot,tab3_annot,tab4a_annot,tab4b_annot,tab4c_annot,tab4d_annot,tab5_annot,tab6_annot, 
-     tab7_annot,tab8a_annot,tab8b_annot,
-     file = "../tables/SupplementalTables_annot_230806.RData")
+save(tab0, tab2,tab3,tab4a,tab4b,tab4c,tab4d,tab5a,tab5b,tab6a,tab6b,tab7a,tab7b,tab7c,tab8a,tab8b,tab8c,
+     file = paste0("../tables/SupplementalTables_",tag,".RData"))
+save(tab2_annot,tab3_annot,tab4a_annot,tab4b_annot,tab4c_annot,tab4d_annot,tab5a_annot,tab5b_annot,tab6_annot, 
+     tab7_annot,tab8a_annot,tab8b_annot,tab8c_annot,
+     file = paste0("../tables/SupplementalTables_annot_",tag2,".RData"))
 
 #' # SessionInfo ####
 #' ***
