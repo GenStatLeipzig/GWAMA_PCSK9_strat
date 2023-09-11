@@ -15,9 +15,8 @@
 #' ***
 #' Perform series of interaction tests: 
 #' 
-#'  1. 3-way interaction test: SNP x sex x statin
-#'  2. 2-way interaction test: SNP x sex
-#'  3. 2-way interaction test: SNP x statin
+#'  1. 2-way interaction test: SNP x sex
+#'  2. 2-way interaction test: SNP x statin
 #' 
 #' Use all sug sig SNPs at the PCSK9 gene locus
 #' 
@@ -31,7 +30,6 @@ source("../SourceFile_angmar.R")
 setwd(paste0(projectpath_main,"/scripts/"))
 
 source("../helperFunctions/TwoWayInteractionTest_jp.R")
-source("../helperFunctions/ThreeWayInteractionTest_jp.R")
 
 #' # Load data ####
 #' ***
@@ -63,6 +61,7 @@ result.0 = rbindlist(dumTab)
 result.0[,candidateGene := "PCSK9"]
 result.0[,rsID := gsub(":.*","",markername)]
 setorder(result.0,chr,bp_hg19)
+result.0 = result.0[!is.na(beta),]
 
 #' # Get Strata info per SNP ####
 #' ***
@@ -102,10 +101,10 @@ result.2[,corStatin := 0]
 #' # Check EAFs ####
 #' ***
 plot(result.2[phenotype == "PCSK9_females",EAF],result.2[phenotype == "PCSK9_females_free",EAF])
-plot(result.2[phenotype == "PCSK9_females",EAF],result.2[phenotype == "PCSK9_females_treated",EAF])
+#plot(result.2[phenotype == "PCSK9_females",EAF],result.2[phenotype == "PCSK9_females_treated",EAF])
 plot(result.2[phenotype == "PCSK9_females",EAF],result.2[phenotype == "PCSK9_males",EAF])
 plot(result.2[phenotype == "PCSK9_females",EAF],result.2[phenotype == "PCSK9_males_free",EAF])
-plot(result.2[phenotype == "PCSK9_females",EAF],result.2[phenotype == "PCSK9_males_treated",EAF])
+#plot(result.2[phenotype == "PCSK9_females",EAF],result.2[phenotype == "PCSK9_males_treated",EAF])
 plot(result.2[phenotype == "PCSK9_females",EAF],result.2[phenotype == "PCSK9_free",EAF])
 plot(result.2[phenotype == "PCSK9_females",EAF],result.2[phenotype == "PCSK9_treated",EAF])
 
@@ -113,21 +112,12 @@ save(result.2,file="../temp/04_IATest_input_PCSK9special.RData")
 
 #' # Interaction Tests ####
 #' ***
-#' ## Run 3-way test ####
-IATab_3way = ThreeWayInteractionTest_jp(data = result.2,
-                                  pheno1 = "PCSK9_males_treated",
-                                  pheno2 = "PCSK9_females_treated",
-                                  pheno3 = "PCSK9_males_free",
-                                  pheno4 = "PCSK9_females_free")
-
-IATab_3way[,candidateGene := "PCSK9"]
-
 #' ## Run 2-way test for sex ####
 IATab_2way_sex = TwoWayInteractionTest_jp(data = result.2,
                                           pheno1 = "males",
                                           pheno2 = "females",
                                           type = "sexIA",
-                                          useBestPheno = F,
+                                          useBestPheno = T,
                                           corCol = "corSex")
 
 IATab_2way_sex[,candidateGene := "PCSK9"]
@@ -137,22 +127,17 @@ IATab_2way_statin = TwoWayInteractionTest_jp(data = result.2,
                                              pheno1 = "treated",
                                              pheno2 = "free",
                                              type = "statinIA",
-                                             useBestPheno = F,
+                                             useBestPheno = T,
                                              corCol = "corStatin")
 
 IATab_2way_statin[,candidateGene := "PCSK9"]
 
 #' ## Combine data sets ####
-matched = match(IATab_3way$markername,result.1$markername)
-IATab_3way[,bestPheno := result.1[matched,phenotype]]
-IATab_3way[,type := "3way"]
-IATab_3way[,fix := NA]
-
 IATab_2way_sex[,cor := NULL]
 IATab_2way_statin[,cor := NULL]
 
-IATab = rbind(IATab_3way,IATab_2way_sex,IATab_2way_statin,fill = T)
-IATab = IATab[,c(1:5,34:37,30:33,6:29)]
+IATab = rbind(IATab_2way_sex,IATab_2way_statin,fill = T)
+IATab = IATab[,c(1:9,22:25,10:21)]
 setorder(IATab,chr,bp_hg19)
 IATab[,c(1:13)]
 
@@ -163,27 +148,23 @@ IATab[,IA_hierarch_fdr5proz := myFDR$hierarch_fdr5proz]
 IATab[,table(IA_hierarch_fdr5proz,candidateGene)]
 
 #' ## Summary ####
-IATab[IA_hierarch_fdr5proz==T & type=="3way",]
-
-#' **Summary** 3-way interaction:
-#' 
-#' Some SNP for away from the PCSK9 gene. only significant in statin-free males
-#' 
-IATab[IA_hierarch_fdr5proz==T & type=="sexIA",c(1:25,38,39)]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA",c(1:13,26,27)]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA" & grepl("free",bestPheno),c(1:13,26,27)]
 
 #' **Summary** 2-way sex interaction:
 #' 
-#' - 1 SNP female specific (rs1566208)
-#' - 29 SNPs with stronger effects in males (in LD with the second signal rs693668! sme outside PCSK9 gene)
+#' - 3 SNP female specific (rs1566208)
+#' - 30 SNPs with stronger effects in males (in LD with the second signal rs693668! sme outside PCSK9 gene)
 #' 
-IATab[IA_hierarch_fdr5proz==T & type=="statinIA",c(1:25,38,39)]
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA",c(1:13,26,27)]
 
 #' **Summary** 2-way statin interaction:
 #' 
-#' - 3 SNPs with stronger effects in statin-free individuals
+#' - 5 SNPs with stronger effects in statin-free individuals
+#' - 1 SNP with stronger effect in statin-treated females
 #' 
 #' ## Save ####
-IATab = IATab[,c(1:13,38,39,14:37)]
+IATab = IATab[,c(1:13,26,27,14:25)]
 save(IATab,file="../results/04_IATest_PCSK9Special_complete.RData")
 
 IATab_filtered = copy(IATab)

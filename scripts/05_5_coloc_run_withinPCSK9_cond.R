@@ -64,15 +64,16 @@ ToDoList
 mySNPs = unique(gsub(".*__","",myPhenos))
 
 dumTab1 = foreach(i=1:dim(ToDoList)[1])%do%{
-  #i=4
+  #i=2
   myRow = copy(ToDoList)
   myRow = myRow[i,]
   
-  dumTab2 = foreach(j=1:length(mySNPs))%do%{
-    #j=1
+  dumTab2 = foreach(j=1:4)%do%{
+    #j=5
     mySNP = mySNPs[j]
     trait1 = paste0("PCSK9_",myRow$trait1,"__",mySNP)
     trait2 = paste0("PCSK9_",myRow$trait2,"__",mySNP)
+    if(i==2)trait1 = paste0("PCSK9_",myRow$trait1,"__",mySNPs[5])
     
     data_GWAS_trait1 = copy(data_GWAS)
     data_GWAS_trait1 = data_GWAS_trait1[pheno == trait1,]

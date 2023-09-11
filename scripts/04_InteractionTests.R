@@ -19,7 +19,7 @@
 #'  2. 2-way interaction test: SNP x sex
 #'  3. 2-way interaction test: SNP x statin
 #' 
-#' Use only the 14 independent SNPs as identified by GCTA COJO. I will not correct for spurious correlation between the strata. 
+#' Use only the 4 independent SNPs PCSK9 as identified by GCTA COJO and the 10 lead SNPs from the GWAS. For the chr 12 locus, I choose the SNP with an rsID (easier to reference). I will not correct for spurious correlation between the strata. 
 #' 
 #' # Initialize ####
 #' ***
@@ -31,7 +31,6 @@ source("../SourceFile_angmar.R")
 setwd(paste0(projectpath_main,"/scripts/"))
 
 source("../helperFunctions/TwoWayInteractionTest_jp.R")
-source("../helperFunctions/ThreeWayInteractionTest_jp.R")
 
 #' # Load data ####
 #' ***
@@ -45,15 +44,11 @@ ToDoList[,statistic_path := paste0("../data/",statistic)]
 ToDoList[,pheno := gsub("SumStat_","",statistic)]
 ToDoList[,pheno := gsub("_23.*","",pheno)]
 
-load("../results/03_GCTA_COJO_filtered.RData")
-IndepSignals = IndepSignals_filtered[!duplicated(SNP),]
+PCSK9_SNPs = fread("../results/03_GCTA_COJO_joint/PCSK9.snplist",header=F)
 load("../results/02_LociOverallPhenotypes_filtered.RData")
-IndepSignals[!is.element(SNP,result.5$markername)]
-result.5[!is.element(markername,IndepSignals$SNP)]
-
-#' Decision: I keep the SNP at chr 12 with the rsID, which is quite similar to the top SNP (which has no rsID). For chr 6 I keep the top SNP
-#' 
-mySNPs = c(result.5$markername[-8],IndepSignals$SNP[c(2:4,11)])
+Other_SNPs = result.5[2:11,markername]
+Other_SNPs[7] = "rs4762806:21067768:T:C"
+mySNPs = c(PCSK9_SNPs$V1,Other_SNPs)
 
 dumTab = foreach(i = 1:dim(ToDoList)[1])%do%{
   #i=1
@@ -65,9 +60,10 @@ dumTab = foreach(i = 1:dim(ToDoList)[1])%do%{
 }
 
 result.0 = rbindlist(dumTab)
-IndepSignals[6,SNP := result.5$markername[3]]
-matched = match(result.0$markername,IndepSignals$SNP)
-result.0[,candidateGene := IndepSignals[matched,candidateGene]]
+result.5[8,markername := "rs4762806:21067768:T:C"]
+matched = match(result.0$markername,result.5$markername)
+result.0[,candidateGene := result.5[matched,candidateGene]]
+result.0[is.na(candidateGene),candidateGene := "PCSK9"]
 result.0[,rsID := gsub(":.*","",markername)]
 setorder(result.0,chr,bp_hg19)
 
@@ -120,24 +116,12 @@ save(result.2,file="../temp/04_IATest_input.RData")
 
 #' # Interaction Tests ####
 #' ***
-#' ## Run 3-way test ####
-IATab_3way = ThreeWayInteractionTest_jp(data = result.2,
-                                  pheno1 = "PCSK9_males_treated",
-                                  pheno2 = "PCSK9_females_treated",
-                                  pheno3 = "PCSK9_males_free",
-                                  pheno4 = "PCSK9_females_free")
-
-matched = match(IATab_3way$markername,result.2$markername)
-table(is.na(matched))
-table(IATab_3way$markername == result.2$markername[matched])
-IATab_3way[,candidateGene := result.2$candidateGene[matched]]
-
 #' ## Run 2-way test for sex ####
 IATab_2way_sex = TwoWayInteractionTest_jp(data = result.2,
                                           pheno1 = "males",
                                           pheno2 = "females",
                                           type = "sexIA",
-                                          useBestPheno = F,
+                                          useBestPheno = T,
                                           corCol = "corSex")
 
 matched = match(IATab_2way_sex$markername,result.2$markername)
@@ -150,7 +134,7 @@ IATab_2way_statin = TwoWayInteractionTest_jp(data = result.2,
                                              pheno1 = "treated",
                                              pheno2 = "free",
                                              type = "statinIA",
-                                             useBestPheno = F,
+                                             useBestPheno = T,
                                              corCol = "corStatin")
 
 matched = match(IATab_2way_statin$markername,result.2$markername)
@@ -159,16 +143,11 @@ table(IATab_2way_statin$markername == result.2$markername[matched])
 IATab_2way_statin[,candidateGene := result.2$candidateGene[matched]]
 
 #' ## Combine data sets ####
-matched = match(IATab_3way$markername,result.1$markername)
-IATab_3way[,bestPheno := result.1[matched,phenotype]]
-IATab_3way[,type := "3way"]
-IATab_3way[,fix := NA]
-
 IATab_2way_sex[,cor := NULL]
 IATab_2way_statin[,cor := NULL]
 
-IATab = rbind(IATab_3way,IATab_2way_sex,IATab_2way_statin,fill = T)
-IATab = IATab[,c(1:5,34:37,30:33,6:29)]
+IATab = rbind(IATab_2way_sex,IATab_2way_statin,fill = T)
+IATab = IATab[,c(1:9,22:25,10:21)]
 setorder(IATab,chr,bp_hg19)
 IATab[,c(1:13)]
 
@@ -179,14 +158,7 @@ IATab[,IA_hierarch_fdr5proz := myFDR$hierarch_fdr5proz]
 IATab[,table(IA_hierarch_fdr5proz,candidateGene)]
 
 #' ## Summary ####
-IATab[IA_hierarch_fdr5proz==T & type=="3way",]
-
-#' **Summary** 3-way interaction:
-#' 
-#' - **PCSK9, rs11583680**: significant 3-way interaction, no association in statin-treated females
-#' - **ALOX5**: significant 3-way interaction, only significant association in statin-free males
-#'        
-IATab[IA_hierarch_fdr5proz==T & type=="sexIA",c(1:25,38,39)]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA",c(1:13,26,27)]
 
 #' **Summary** 2-way sex interaction:
 #' 
@@ -196,22 +168,23 @@ IATab[IA_hierarch_fdr5proz==T & type=="sexIA",c(1:25,38,39)]
 #' - **SLCO1B1**: female-specfic association
 #' - **NOS1**: male-specific association
 #' 
-IATab[IA_hierarch_fdr5proz==T & type=="statinIA",c(1:25,38,39)]
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA",c(1:13,26,27)]
 
 #' **Summary** 2-way statin interaction:
 #' 
 #' - **PCSK9, rs11591147**: statin-related, stronger in statin-free individuals
+#' - **PCSK9, rs11583680**: statin-related, stronger in statin-treated individuals
 #' - **APOB**: free-specific effect
 #' - **KHDRBS2**: treated-specific effect
 #' - **PRKAG2**: free-specific effect
 #' 
 #' ## Save ####
-IATab = IATab[,c(1:13,38,39,14:37)]
-save(IATab,file="../results/04_IATest_complete.RData")
+IATab = IATab[,c(1:13,26,27,14:25)]
+save(IATab,file="../results/04_IATest_2way_complete.RData")
 
 IATab_filtered = copy(IATab)
 IATab_filtered = IATab_filtered[,c(1:15)]
-save(IATab_filtered,file="../results/04_IATest_filtered.RData")
+save(IATab_filtered,file="../results/04_IATest_2way_filtered.RData")
 
 #' # Session Info ####
 #' ***

@@ -40,8 +40,8 @@ load("../results/03_GCTA_COJO.RData")
 myPhenos = unique(IndepSignals$pheno)
 mySNPs = unique(IndepSignals$SNP)
 
-genes = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/proximate_genes_2023-07-26_PCSK9_strat.txt")
-eQTLs = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/eqtlinfo_2023-07-26_PCSK9_strat.txt")
+genes = fread(paste0(path_GenStatPipeline,"synopsis/topliste_tabdelim/proximate_genes_2023-07-26_PCSK9_strat.txt"))
+eQTLs = fread(paste0(path_GenStatPipeline,"synopsis/topliste_tabdelim/eqtlinfo_2023-07-26_PCSK9_strat.txt"))
 
 genes = genes[markername %in% mySNPs,]
 eQTLs = eQTLs[snps %in% mySNPs,]

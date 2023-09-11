@@ -30,10 +30,10 @@ source("../helperFunctions/colocFunction_jp.R")
 #' # Get ToDoList ####
 #' ***
 load("../results/05_1_usedGenes.RData")
-load("../results/03_GCTA_COJO.RData")
-table(is.element(IndepSignals$candidateGene,myGenTab$genename))
-matched = match(IndepSignals$candidateGene,myGenTab$genename)
-IndepSignals[,cytoband := myGenTab[matched,cytoband]]
+# load("../results/03_GCTA_COJO_slct.RData")
+# table(is.element(IndepSignals$candidateGene,myGenTab$genename))
+# matched = match(IndepSignals$candidateGene,myGenTab$genename)
+# IndepSignals[,cytoband := myGenTab[matched,cytoband]]
 
 ToDoList = data.table(NR = 1:32)
 

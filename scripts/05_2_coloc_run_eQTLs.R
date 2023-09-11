@@ -75,7 +75,7 @@ ToDoList[,pheno := gsub("_23.*","",pheno)]
 registerDoMC(cores=20)
 
 dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
-  #k=5
+  #k=1
   myPheno = ToDoList[k,pheno]
   # myPheno2 = gsub(myPheno,pattern="\\_.*",replacement = "")
   message("Working on phenotype ",myPheno)
@@ -93,13 +93,14 @@ dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
   data_GWAS[EAF>0.5,maf := 1-EAF]
   
   # relevant loci
-  uniqueCytos1 = IndepSignals[pheno == myPheno, unique(cytoband)]
-  uniqueCytos2 = myGenTab[cytoband2 %in% uniqueCytos1, unique(cytoband)]
+  # uniqueCytos1 = IndepSignals[pheno == myPheno, unique(cytoband)]
+  # uniqueCytos2 = myGenTab[cytoband2 %in% uniqueCytos1, unique(cytoband)]
+  uniqueCytos2 = myGenTab[, unique(cytoband)]
   
   myeQTLs2<-dir(path = "../temp/05_coloc/",pattern = ".RData")
   
   dumTab2 = foreach(i=c(1:length(myeQTLs2)))%dopar%{
-    #i=3
+    #i=4
     loaded = load(paste0("../temp/05_coloc/",myeQTLs2[i]))
     data_eQTLs = get(loaded)
     myTissue2 = gsub("GTEx_v8_filtered_","",myeQTLs2[i])
@@ -113,7 +114,7 @@ dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
     dummy = dummy[gene %in% ToDoList2[,genename]]
     
     dumTab3 = foreach(j=c(1:dim(dummy)[1]))%do%{
-      #j=8
+      #j=10
       myRow = dummy[j,]
       moreInfo = copy(ToDoList2)
       moreInfo = moreInfo[genename == myRow$gene,]

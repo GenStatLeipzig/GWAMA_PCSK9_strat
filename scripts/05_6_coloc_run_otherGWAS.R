@@ -189,26 +189,26 @@ mySleep[,table(candidateGene)]
 #' ## Save other GWAS data ####
 myOtherGWAS = rbind(myCAD,myLipids,mySleep)
 save(myOtherGWAS, file="../temp/05_OtherGWASs.RData")
-#load("../temp/05_OtherGWASs.RData")
+load("../temp/05_OtherGWASs.RData")
 
 #' # Run Coloc ####
 #' ***
 data_GWAS[,ChrPos := paste(chr,bp_hg19,sep=":")]
 data_GWAS[,dumID := paste(candidateGene,phenotype,sep="__")]
 myLoci = unique(data_GWAS$dumID)
-IndepSignals[,dumID := paste(candidateGene,pheno,sep="__")]
-filt1 = grepl("PCSK9__PCSK9",myLoci)
-filt2 = myLoci %in% IndepSignals$dumID
-filt = filt1 | filt2
-table(filt)
-myLoci = myLoci[filt]
-data_GWAS = data_GWAS[dumID %in% myLoci,]
+# IndepSignals[,dumID := paste(candidateGene,pheno,sep="__")]
+# filt1 = grepl("PCSK9__PCSK9",myLoci)
+# filt2 = myLoci %in% IndepSignals$dumID
+# filt = filt1 | filt2
+# table(filt)
+# myLoci = myLoci[filt]
+# data_GWAS = data_GWAS[dumID %in% myLoci,]
 
 myOtherGWAS[,ChrPos := paste(chr,bp_hg19,sep=":")]
 myOtherGWAS[,phenotype := gsub("MALE","MALES",phenotype)]
 
 dumTab1 = foreach(i=1:length(myLoci))%do%{
-  #i=1
+  #i=2
   myLocus = myLoci[i]
   myGene = gsub("__.*","",myLocus)
   myPheno = gsub(".*__","",myLocus)

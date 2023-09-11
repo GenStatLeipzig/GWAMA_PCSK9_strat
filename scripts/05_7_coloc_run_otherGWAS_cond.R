@@ -72,7 +72,7 @@ data_GWAS[,ChrPos := paste(Chr,bp,sep=":")]
 myOtherGWAS[,ChrPos := paste(chr,bp,sep=":")]
 
 dumTab1 = foreach(i=1:dim(ToDoList)[1])%do%{
-  #i=1
+  #i=85
   myRow = copy(ToDoList)
   myRow = myRow[i,]
   

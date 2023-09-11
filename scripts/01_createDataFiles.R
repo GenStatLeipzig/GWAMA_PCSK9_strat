@@ -28,8 +28,8 @@ setwd(paste0(projectpath_main,"/scripts/"))
 #' ***
 ToDoList = data.table(NR = 1:8)
 
-ToDoList[,statistic := list.files(path = "../../2307_GWAMA/06_Annotation2/results/",pattern = "step10")]
-ToDoList[,statistic_path := paste0("../../2307_GWAMA/06_Annotation2/results/",statistic)]
+ToDoList[,statistic := list.files(path = path_GenStatPipeline,pattern = "step10")]
+ToDoList[,statistic_path := paste0(path_GenStatPipeline,statistic)]
 
 ToDoList[,pheno := gsub("step10_2_primaryANDsecondary_","",statistic)]
 ToDoList[,pheno := gsub(".RData","",pheno)]
