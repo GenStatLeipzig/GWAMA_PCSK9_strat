@@ -1,5 +1,5 @@
 #' ---
-#' title: "Main Table 2: Summary of PCSK9 locus"
+#' title: "Main Table 2: Interaction Test results"
 #' subtitle: "PCSK9 GWAMA sex-stratified"
 #' author: "Janne Pott"
 #' date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
@@ -13,17 +13,17 @@
 #'
 #' # Introduction ####
 #' ***
-#' **Table 1: Additional SNPs with at least suggestive significance in our GWAMA.**: 
+#' **Table 2: Significant interactions of the indenpendent SNPs of the valid loci**: 
 #' 
 #' * Cytoband
 #' * Candidate Gene
-#' * SNP - EA
-#' * Associated phenotypes
-#' * Sample size
-#' * Effect allele frequency
-#' * beta
-#' * P
-#' * Interaction T/F/T
+#' * SNP
+#' * Best associated phenotype
+#' * Type (3way, sexIA, statinIA)
+#' * Difference 
+#' * SE
+#' * p-value
+#' * q-value (after hierFDR!)
 #' 
 #' # Initialize ####
 #' ***
@@ -36,83 +36,56 @@ setwd(paste0(projectpath_main,"scripts/"))
 
 #' # Load data ####
 #' ***
-load("../results/05_GCTA_COJO.RData")
+load("../results/04_IATest_2way_filtered.RData")
 
-#' ## Filt data for PCSK9
-tab2 = copy(IndepSignals)
-tab2 = tab2[candidateGene !="PCSK9",]
+#' ## Filt data for significant IAs
+tab2 = copy(IATab_filtered)
+tab2 = tab2[IA_hierarch_fdr5proz == T,]
 
 #' ## Filt data for relevant columns
 names(tab2)
-names(tab2)[c(2,3,21,26,4,15,9,5,6,8)]
+names(tab2)[c(6,1,7,8,10,11,13,14)]
 
-tab2 = tab2[,c(2,3,21,26,4,15,9,5,6,8)]
+tab2 = tab2[,c(6,1,7,8,10,11,13,14)]
 tab2
 
 #' # Add cytoband score ####
 #' ***
-toplist = fread("../../2210_GWAMA/06_Annotation/results/synopsis/topliste_tabdelim/topliste_2023-01-21_PCSK9_sex_strat_v2.txt")
-toplist = toplist[markername %in% tab2$SNP,]
-matched = match(tab2$SNP,toplist$markername)
-table(tab2$SNP == toplist[matched,markername])
+toplist = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/topliste_2023-07-26_PCSK9_strat.txt")
+toplist = toplist[markername %in% tab2$markername,]
+matched = match(tab2$markername,toplist$markername)
+table(tab2$markername == toplist[matched,markername])
 tab2[,cytoband := toplist[matched,cyto]]
-tab2[,n := toplist[matched,topn]]
-tab2
-
-#' # Add interaction info ####
-#' ***
-load("../results/03_InteractionTests_3way.RData")
-IATab_3way = IATab_3way[markername %in% tab2$SNP]
-IATab_3way
-load("../results/03_InteractionTests_2way.RData")
-IATab_2way = IATab_2way[markername %in% tab2$SNP]
-IATab_2way_sex = copy(IATab_2way)
-IATab_2way_sex = IATab_2way_sex[type =="sexIA"]
-IATab_2way_statin = copy(IATab_2way)
-IATab_2way_statin = IATab_2way_statin[type !="sexIA"]
-
-matched = match(tab2$SNP,IATab_3way$markername)
-table(tab2$SNP == IATab_3way[matched,markername])
-tab2[,IA_3way := IATab_3way[matched,IA_pval]]
-
-matched = match(tab2$SNP,IATab_2way_sex$markername)
-table(tab2$SNP == IATab_2way_sex[matched,markername])
-tab2[,IA_2way_sex := IATab_2way_sex[matched,IA_pval]]
-
-matched = match(tab2$SNP,IATab_2way_statin$markername)
-table(tab2$SNP == IATab_2way_statin[matched,markername])
-tab2[,IA_2way_tatin := IATab_2way_statin[matched,IA_pval]]
+tab2 = tab2[,c(9,1:8)]
 tab2
 
 #' # Make pretty ####
 #' ***
-tab2[,SNP := NULL]
-tab2[,bp := NULL]
-tab2[,pheno := gsub("PCSK9_","",pheno)]
-tab2[,pheno := gsub("females_","F - ",pheno)]
-tab2[,pheno := gsub("males_","M - ",pheno)]
-tab2[,pheno := gsub("females","F - comb",pheno)]
-tab2[,pheno := gsub("males","M - comb",pheno)]
-tab2[pheno == "free",pheno := "A - free"]
-tab2[pheno == "treated",pheno := "A - treated"]
+setnames(tab2,"markername","SNP")
+tab2[,SNP := gsub(":.*","",SNP)]
 
-tab2[,freq := round(freq,3)]
-tab2[,b := round(b,3)]
-tab2[,p := signif(p,3)]
-tab2[,IA_3way := signif(IA_3way,3)]
-tab2[,IA_2way_sex := signif(IA_2way_sex,3)]
-tab2[,IA_2way_tatin := signif(IA_2way_tatin,3)]
-tab2[,SNP_EA := paste(rsID, refA, sep=" - ")]
-tab2[,region := c(rep("A",5),"B",rep("C",6))]
+tab2[,bestPheno := gsub("PCSK9_","",bestPheno)]
+tab2[,bestPheno := gsub("females_","F - ",bestPheno)]
+tab2[,bestPheno := gsub("males_","M - ",bestPheno)]
+tab2[,bestPheno := gsub("males","M",bestPheno)]
 
-tab2 = tab2[,c(9,1,13,4:8,10:12)]
+tab2[,type := gsub("IA","",type)]
+
+tab2[,IA_diff := round(IA_diff,3)]
+tab2[,IA_SE := round(IA_SE,3)]
+tab2[,IA_pval := signif(IA_pval,3)]
+tab2[,IA_pval_adj := signif(IA_pval_adj,3)]
+setnames(tab2,"IA_pval_adj","IA_qval")
+
 tab2
+
+setorder(tab2,type,IA_qval)
 
 #' # Save ####
 #' ***
 tosave4 = data.table(data = c("tab2"), 
                      SheetNames = c("MainTable2"))
-excel_fn = "../tables/MainTable2.xlsx"
+excel_fn = "../tables/MainTable2_230907.xlsx"
 
 WriteXLS(tosave4$data, 
          ExcelFileName=excel_fn, 

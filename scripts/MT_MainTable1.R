@@ -41,7 +41,7 @@ result.5 = copy(result.2)
 setorder(result.5,pval)
 result.5 = result.5[!duplicated(markername),]
 
-gwas_annot = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/topliste_2023-07-26_PCSK9_strat.txt")
+gwas_annot = fread(paste(path_GenStatPipeline,"synopsis/topliste_tabdelim/topliste_2023-07-26_PCSK9_strat.txt"))
 gwas_annot = gwas_annot[markername %in% result.5$markername]
 
 table(gwas_annot$markername == result.5$markername)
