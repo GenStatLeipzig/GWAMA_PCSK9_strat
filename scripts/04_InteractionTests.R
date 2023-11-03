@@ -46,8 +46,8 @@ ToDoList[,pheno := gsub("_23.*","",pheno)]
 
 PCSK9_SNPs = fread("../results/03_GCTA_COJO_joint/PCSK9.snplist",header=F)
 load("../results/02_LociOverallPhenotypes_filtered.RData")
-Other_SNPs = result.5[2:11,markername]
-Other_SNPs[7] = "rs4762806:21067768:T:C"
+Other_SNPs = result.5[-1,markername]
+Other_SNPs[grep("12:21117156:GAA:GA",Other_SNPs)] = "rs4762806:21067768:T:C"
 mySNPs = c(PCSK9_SNPs$V1,Other_SNPs)
 
 dumTab = foreach(i = 1:dim(ToDoList)[1])%do%{
@@ -60,7 +60,7 @@ dumTab = foreach(i = 1:dim(ToDoList)[1])%do%{
 }
 
 result.0 = rbindlist(dumTab)
-result.5[8,markername := "rs4762806:21067768:T:C"]
+result.5[grep("12:21117156:GAA:GA",markername),markername := "rs4762806:21067768:T:C"]
 matched = match(result.0$markername,result.5$markername)
 result.0[,candidateGene := result.5[matched,candidateGene]]
 result.0[is.na(candidateGene),candidateGene := "PCSK9"]
@@ -157,18 +157,36 @@ IATab[,IA_pval_adj := myFDR$fdr_level1]
 IATab[,IA_hierarch_fdr5proz := myFDR$hierarch_fdr5proz]
 IATab[,table(IA_hierarch_fdr5proz,candidateGene)]
 
+IATab[,diff2 := abs(trait1_beta) - abs(trait2_beta)]
+IATab[,diff3 := sign(diff2)]
+
+IATab[,type2 := "unspecific"]
+
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA" & diff3==1 & trait2_pval>1e-6, type2 := "male-specific"]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA" & diff3==-1 & trait1_pval>1e-6, type2 := "female-specific"]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA" & diff3==1 & trait1_pval<=1e-6 & trait2_pval<=1e-6, type2 := "sex-related (stronger in males)"]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA" & diff3==-1 & trait1_pval<=1e-6 & trait2_pval<=1e-6, type2 := "sex-related (stronger in females)"]
+
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA" & diff3==1 & trait2_pval>1e-6, type2 := "treated-specific"]
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA" & diff3==-1 & trait1_pval>1e-6, type2 := "free-specific"]
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA" & diff3==1 & trait1_pval<=1e-6 & trait2_pval<=1e-6, type2 := "statin-related (stronger in treated)"]
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA" & diff3==-1 & trait1_pval<=1e-6 & trait2_pval<=1e-6, type2 := "statin-related (stronger in free)"]
+
+IATab[IA_hierarch_fdr5proz==T,.N,c("type2","diff3")]
+
 #' ## Summary ####
-IATab[IA_hierarch_fdr5proz==T & type=="sexIA",c(1:13,26,27)]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA",c(1:13,26,27,30)]
 
 #' **Summary** 2-way sex interaction:
 #' 
 #' - **PCSK9, rs693668**: sex-related, stronger in males
+#' - **PLPP3**: male-specific association
 #' - **PRKAG2**: male-specific association
 #' - **ALOX5**: male-specific association
 #' - **SLCO1B1**: female-specfic association
 #' - **NOS1**: male-specific association
 #' 
-IATab[IA_hierarch_fdr5proz==T & type=="statinIA",c(1:13,26,27)]
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA",c(1:13,26,27,30)]
 
 #' **Summary** 2-way statin interaction:
 #' 
@@ -177,13 +195,15 @@ IATab[IA_hierarch_fdr5proz==T & type=="statinIA",c(1:13,26,27)]
 #' - **APOB**: free-specific effect
 #' - **KHDRBS2**: treated-specific effect
 #' - **PRKAG2**: free-specific effect
+#' - **ALOX**: free-specific effect
+#' - **JMJD1C**: free-specific effect
 #' 
 #' ## Save ####
-IATab = IATab[,c(1:13,26,27,14:25)]
+IATab = IATab[,c(1:13,26,27,30,14:25)]
 save(IATab,file="../results/04_IATest_2way_complete.RData")
 
 IATab_filtered = copy(IATab)
-IATab_filtered = IATab_filtered[,c(1:15)]
+IATab_filtered = IATab_filtered[,c(1:16)]
 save(IATab_filtered,file="../results/04_IATest_2way_filtered.RData")
 
 #' # Session Info ####

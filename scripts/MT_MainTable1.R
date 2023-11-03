@@ -41,7 +41,7 @@ result.5 = copy(result.2)
 setorder(result.5,pval)
 result.5 = result.5[!duplicated(markername),]
 
-gwas_annot = fread(paste(path_GenStatPipeline,"synopsis/topliste_tabdelim/topliste_2023-07-26_PCSK9_strat.txt"))
+gwas_annot = fread(paste0(path_GenStatPipeline,"synopsis/topliste_tabdelim/topliste_2023-07-26_PCSK9_strat.txt"))
 gwas_annot = gwas_annot[markername %in% result.5$markername]
 
 table(gwas_annot$markername == result.5$markername)
@@ -59,7 +59,7 @@ tab1
 #' ***
 names(tab1)
 tab1[,phenotype := gsub("PCSK9_","",phenotype)]
-tab1[,phenotype := gsub("females_","F - ",phenotype)]
+tab1[,phenotype := gsub("females_","W - ",phenotype)]
 tab1[,phenotype := gsub("males_","M - ",phenotype)]
 tab1[,phenotype := gsub("males","M",phenotype)]
 
@@ -72,6 +72,10 @@ tab1[,r2 := round(r2,2)]
 tab1[,nearbyGene := gsub("[(].*","",nearbyGene)]
 setnames(tab1,"nearbyGene","nearestGene")
 tab1[,candidateGene := result.5$candidateGene]
+
+#' reorder by known/novel and chromosomal position
+#' 
+tab1 = tab1[c(1:5,12,7,11,6,9,14,10,13,8)]
 
 #' # Save ####
 #' ***

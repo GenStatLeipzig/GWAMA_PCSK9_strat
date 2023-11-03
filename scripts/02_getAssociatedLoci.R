@@ -270,8 +270,8 @@ save(result.4,file="../results/02_LociOverallPhenotypes.RData")
 result.5 = copy(result.4)
 result.5 = result.5[NR_SNPs >1]
 result.5[,candidateGene := c("PCSK9","APOB","KHDRBS2",
-                             "PRKAG2","ALOX5","JMJD1C","FADS1","SLCO1B3","NOS1",
-                             "HP","TM6SF2")]
+                             "PRKAG2","ALOX5","JMJD1C","FADS1","SLCO1B3","NOS1/KSR2",
+                             "HP/HPR","TM6SF2")]
 result.5
 save(result.5,file="../results/02_LociOverallPhenotypes_filtered.RData")
 

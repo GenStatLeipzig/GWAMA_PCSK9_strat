@@ -38,16 +38,19 @@ myOtherGWAS[,.N,by=phenotype]
 myPhenos = unique(data_GWAS$pheno)
 myPhenos
 
-myOtherGWASPhenos = c("CAD","HDL","LDL","logTG","nonHDL","TC")
+myOtherGWASPhenos = c("CAD","HDL","LDL","TC","nonHDL","logTG","bilirubin","sleep_duration")
 
-ToDoList = data.table(trait1 = rep(myPhenos,each=6),
+ToDoList = data.table(trait1 = rep(myPhenos,each=8),
                       trait2 = rep(myOtherGWASPhenos,8))
-ToDoList[grepl("_female",trait1),trait2 := paste0(trait2,"_INV_FEMALE")]
-ToDoList[grepl("_male",trait1),trait2 := paste0(trait2,"_INV_MALE")]
-ToDoList[!grepl("INV",trait2),trait2 := paste0(trait2,"_INV_ALL")]
-ToDoList[grepl("CAD",trait2),trait2 := "CAD"]
+ToDoList[grepl("_female",trait1) & trait2 %in% c("HDL","LDL","TC","nonHDL","logTG"),
+         trait2 := paste0(trait2,"_INV_FEMALE")]
+ToDoList[grepl("_male",trait1)& trait2 %in% c("HDL","LDL","TC","nonHDL","logTG"),
+         trait2 := paste0(trait2,"_INV_MALE")]
+ToDoList[!grepl("INV",trait2) & trait2 %in% c("HDL","LDL","TC","nonHDL","logTG"),
+         trait2 := paste0(trait2,"_INV_ALL")]
 
 table(is.element(ToDoList$trait2,myOtherGWAS$phenotype))
+table(is.element(myOtherGWAS$phenotype,ToDoList$trait2))
 mySNPs = unique(gsub(".*__","",myPhenos))
 
 #' # Prep data ####
@@ -63,6 +66,8 @@ setnames(myOtherGWAS,"SE","bC_se")
 setnames(myOtherGWAS,"pval","pC")
 setnames(myOtherGWAS,"EA","refA")
 myOtherGWAS[,refA2 := refA]
+myOtherGWAS[phenotype == "sleep_duration",refA2 := OA]
+myOtherGWAS[phenotype == "sleep_duration",refA := OA]
 setnames(myOtherGWAS,"nSamples","N")
 
 
@@ -72,7 +77,7 @@ data_GWAS[,ChrPos := paste(Chr,bp,sep=":")]
 myOtherGWAS[,ChrPos := paste(chr,bp,sep=":")]
 
 dumTab1 = foreach(i=1:dim(ToDoList)[1])%do%{
-  #i=85
+  #i=8
   myRow = copy(ToDoList)
   myRow = myRow[i,]
   
@@ -85,8 +90,14 @@ dumTab1 = foreach(i=1:dim(ToDoList)[1])%do%{
   data_GWAS1 = data_GWAS1[ChrPos %in% data_GWAS2$ChrPos,]
   data_GWAS2 = data_GWAS2[ChrPos %in% data_GWAS1$ChrPos,]
   
+  duplicatedPos = c(data_GWAS1[duplicated(ChrPos),bp],data_GWAS2[duplicated(ChrPos),bp])
+  data_GWAS1 = data_GWAS1[!is.element(bp,duplicatedPos),]
+  data_GWAS2 = data_GWAS2[!is.element(bp,duplicatedPos),]
+  
   setorder(data_GWAS1,bp)
   setorder(data_GWAS2,bp)
+  stopifnot(data_GWAS1$ChrPos == data_GWAS2$ChrPos)
+  if(myRow$trait2 == "bilirubin")data_GWAS2[,MAF := data_GWAS1$MAF]
   
   res = colocFunction_jp(tab1 = data_GWAS1,tab2 = data_GWAS2,
                          trait1 = myRow$trait1,trait2 = myRow$trait2,

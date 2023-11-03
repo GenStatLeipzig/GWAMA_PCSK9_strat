@@ -35,8 +35,13 @@ source("../helperFunctions/TwoWayInteractionTest_jp.R")
 #' ***
 #' Load data and filter for suggestive significant and valid SNPs. Finally, merge all significant SNPs into one object. 
 #' 
+load("../results/02_LociOverallPhenotypes.RData")
+result.4 = result.4[markername == "rs11591147:55505647:G:T",]
+
 SNPList = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/topliste_2023-07-26_PCSK9_strat.txt")
-SNPList = SNPList[cyto == "1p32.3",]
+SNPList = SNPList[chr == result.4$chr,]
+SNPList = SNPList[pos >= result.4$region_start,]
+SNPList = SNPList[pos <= result.4$region_end,]
 
 ToDoList = data.table(NR = 1:8)
 
@@ -145,30 +150,49 @@ IATab[,c(1:13)]
 myFDR = addHierarchFDR(pvalues = IATab$IA_pval, categs = IATab$markername,quiet = F)
 IATab[,IA_pval_adj := myFDR$fdr_level1]
 IATab[,IA_hierarch_fdr5proz := myFDR$hierarch_fdr5proz]
-IATab[,table(IA_hierarch_fdr5proz,candidateGene)]
+IATab[,diff2 := abs(trait1_beta) - abs(trait2_beta)]
+IATab[,diff3 := sign(diff2)]
+
+IATab[,type2 := "unspecific"]
+
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA" & diff3==1 & trait2_pval>1e-6, type2 := "male-specific"]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA" & diff3==-1 & trait1_pval>1e-6, type2 := "female-specific"]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA" & diff3==1 & trait1_pval<=1e-6 & trait2_pval<=1e-6, type2 := "sex-related (stronger in males)"]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA" & diff3==-1 & trait1_pval<=1e-6 & trait2_pval<=1e-6, type2 := "sex-related (stronger in females)"]
+
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA" & diff3==1 & trait2_pval>1e-6, type2 := "treated-specific"]
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA" & diff3==-1 & trait1_pval>1e-6, type2 := "free-specific"]
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA" & diff3==1 & trait1_pval<=1e-6 & trait2_pval<=1e-6, type2 := "statin-related (stronger in treated)"]
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA" & diff3==-1 & trait1_pval<=1e-6 & trait2_pval<=1e-6, type2 := "statin-related (stronger in free)"]
+
+IATab[IA_hierarch_fdr5proz==T,.N,c("type2","diff3")]
 
 #' ## Summary ####
 IATab[IA_hierarch_fdr5proz==T & type=="sexIA",c(1:13,26,27)]
-IATab[IA_hierarch_fdr5proz==T & type=="sexIA" & grepl("free",bestPheno),c(1:13,26,27)]
+IATab[IA_hierarch_fdr5proz==T & type=="sexIA",table(type2)]
 
 #' **Summary** 2-way sex interaction:
 #' 
-#' - 3 SNP female specific (rs1566208)
-#' - 30 SNPs with stronger effects in males (in LD with the second signal rs693668! sme outside PCSK9 gene)
+#' - 1 SNP female specific (rs1566208)
+#' - 11 SNPs with stronger effects in males (same intron of rs693668)
+#' - 40 SNPs male specific (1 cluster around rs693668, other cluster around the second locus, which was collapsed with PCSK9)
 #' 
 IATab[IA_hierarch_fdr5proz==T & type=="statinIA",c(1:13,26,27)]
+IATab[IA_hierarch_fdr5proz==T & type=="statinIA",table(type2)]
 
 #' **Summary** 2-way statin interaction:
 #' 
-#' - 5 SNPs with stronger effects in statin-free individuals
-#' - 1 SNP with stronger effect in statin-treated females
+#' - 5 SNPs free-specific (3 in weak LD with rs11591147, 2 in weak LD with rs2495477)
+#' - 2 SNPs with stronger effects in statin-free people (rs11591147 and rs2495477)
+#' - 3 SNPs with stronger effects in statin-treated people (in LD with rs11583680)
+#' - 1 SNP treated-specific (in LD with rs11583680)
 #' 
 #' ## Save ####
-IATab = IATab[,c(1:13,26,27,14:25)]
+IATab = IATab[,c(1:13,26,27,30,14:25)]
 save(IATab,file="../results/04_IATest_PCSK9Special_complete.RData")
 
 IATab_filtered = copy(IATab)
-IATab_filtered = IATab_filtered[,c(1:15)]
+IATab_filtered = IATab_filtered[,c(1:16)]
 save(IATab_filtered,file="../results/04_IATest_PCSK9Special_filtered.RData")
 
 #' # Session Info ####

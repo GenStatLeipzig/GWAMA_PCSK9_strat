@@ -30,10 +30,6 @@ source("../helperFunctions/colocFunction_jp.R")
 #' # Get ToDoList ####
 #' ***
 load("../results/05_1_usedGenes.RData")
-# load("../results/03_GCTA_COJO_slct.RData")
-# table(is.element(IndepSignals$candidateGene,myGenTab$genename))
-# matched = match(IndepSignals$candidateGene,myGenTab$genename)
-# IndepSignals[,cytoband := myGenTab[matched,cytoband]]
 
 ToDoList = data.table(NR = 1:32)
 
@@ -66,6 +62,12 @@ data_GWAS[,MAF := freq]
 data_GWAS[freq>0.5,MAF := 1-freq]
 data_GWAS[,N := ceiling(n)]
 data_GWAS[,refA2 := refA]
+data_GWAS[,.N,by=pheno]
+data_GWAS[grepl("rs693668",pheno),.N,by=pheno]
+data_GWAS[grepl("rs2495477",pheno),.N,by=pheno]
+data_GWAS[,pheno := gsub("rs2495477","rs693668",pheno)]
+data_GWAS[grepl("rs693668",pheno),.N,by=pheno]
+
 save(data_GWAS,file = "../temp/05_PCSK9cond.RData")
 data_GWAS[,chrPos_b37 := paste0("chr1:",bp)]
 

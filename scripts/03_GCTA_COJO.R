@@ -34,6 +34,9 @@ setwd(paste0(projectpath_main,"/scripts/"))
 
 #' # Step 1: get GCTA file format ####
 #' ***
+load("../results/02_LociOverallPhenotypes.RData")
+result.4 = result.4[markername == "rs11591147:55505647:G:T",]
+
 ToDoList = data.table(NR = 1:8)
 
 ToDoList[,statistic := list.files(path = "../data/",pattern = "PCSK9")]
@@ -45,7 +48,7 @@ ToDoList[,pheno := gsub("_23.*","",pheno)]
 if(dir.exists("../temp/03_GCTA_input/")==F) dir.create("../temp/03_GCTA_input/") 
 
 dumTab1 = foreach(i = 1:dim(ToDoList)[1])%do%{
-  #i=4
+  #i=1
   
   # load data
   data = fread(ToDoList[i,statistic_path])
@@ -76,14 +79,19 @@ dumTab1 = foreach(i = 1:dim(ToDoList)[1])%do%{
   fwrite(data,file=outfn,sep = "\t")
   
   # return PCSK9 locus
-  data2 = data2[chr == 1,]
-  data2 = data2[bp_hg19>=55505647 - 500000,]
-  data2 = data2[bp_hg19<=55505647 + 500000,]
+  data2 = data2[chr == result.4$chr,]
+  data2 = data2[bp_hg19 >= result.4$region_start,]
+  data2 = data2[bp_hg19 <= result.4$region_end,]
   data2
   
 }
 INPUTtab = rbindlist(dumTab1)
 INPUTtab
+
+SNPList = unique(INPUTtab$markername)
+fn0 = "../temp/03_GCTA_input/PCSK9.snplist"
+write.table(unique(INPUTtab$markername),
+            file=fn0,col.names = F,row.names = F,quote = F)
 
 #' # Step 2: perform GCTA COJO select ####
 #' ***
@@ -93,7 +101,7 @@ result.3[,input := paste0("../temp/03_GCTA_input/",phenotype,".ma")]
 if(dir.exists("../results/03_GCTA_COJO_slct/")==F) dir.create("../results/03_GCTA_COJO_slct/") 
 
 dumTab2<-foreach(i = 1:dim(result.3)[1])%do%{
-  #i=4
+  #i=1
   myRow = result.3[i,]
   myPheno<-myRow[1,phenotype]
   mySNP<-myRow[1,markername]
@@ -110,7 +118,7 @@ dumTab2<-foreach(i = 1:dim(result.3)[1])%do%{
                  " --cojo-file ",myInput,
                  " --cojo-p ", myCut,
                  " --cojo-slct",
-                 " --extract-region-snp ",mySNP," 500",
+                 " --extract ", fn0,
                  " --out ../results/03_GCTA_COJO_slct/",myOutput)
   mycall
   system(mycall)
@@ -265,7 +273,7 @@ for(i in 1:dim(result.3)[1]){
                    " --maf 0.01",
                    " --cojo-file ",myInput,
                    " --cojo-cond ",fn,
-                   " --extract-region-snp ",mySNP," 500",
+                   " --extract ", fn0,
                    " --out ../results/03_GCTA_COJO_cond/",myPheno,"_signal_",myRSID)
     
     mycall

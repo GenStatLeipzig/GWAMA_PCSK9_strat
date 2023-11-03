@@ -35,10 +35,11 @@ setwd(paste0(projectpath_main,"scripts/"))
 
 #' # Step 1: Get genes per region ####
 #' ***
-load("../results/03_GCTA_COJO.RData")
-
-myPhenos = unique(IndepSignals$pheno)
-mySNPs = unique(IndepSignals$SNP)
+load("../results/02_LociOverallPhenotypes_filtered.RData")
+IndepSignals = copy(result.5)
+IndepSignals[grep("12:21117156:GAA:GA",markername), markername:="rs4762806:21067768:T:C"]
+IndepSignals[grep("rs12758651:56413408:A:G",markername), markername:="rs76831627:56198190:G:T"]
+mySNPs = unique(IndepSignals$markername)
 
 genes = fread(paste0(path_GenStatPipeline,"synopsis/topliste_tabdelim/proximate_genes_2023-07-26_PCSK9_strat.txt"))
 eQTLs = fread(paste0(path_GenStatPipeline,"synopsis/topliste_tabdelim/eqtlinfo_2023-07-26_PCSK9_strat.txt"))
@@ -118,7 +119,7 @@ dumTab1<-foreach(i=c(1:length(myeQTLs)))%do%{
   message("Loading eQTL data ",myTissue," number ",i," of ",length(myeQTLs))
   data0<-fread(paste0(path_GTExv8, myeQTLs[i]))
   time2 = Sys.time()
-  message("          Finished loading eQTL data in ",round(difftime(time2, time1, tz,units = "min"),2)," minutes")
+  message("          Finished loading eQTL data in ",round(difftime(time2, time1, units = "min"),2)," minutes")
 
   # Step 2: Change GeneID and filter for candidate genes
   data0[,ENSG:=gsub(gene_id, pattern = "\\..*", replacement = "")]
@@ -128,7 +129,7 @@ dumTab1<-foreach(i=c(1:length(myeQTLs)))%do%{
   filt<-is.element(data0$ENSG,myGenTab$ensg)
   data0<-data0[filt,]
   time3 = Sys.time()
-  message("          Finished filtering eQTL data in ",round(difftime(time3, time2, tz,units = "min"),2)," minutes")
+  message("          Finished filtering eQTL data in ",round(difftime(time3, time2, units = "min"),2)," minutes")
 
   # Step 3: Get chr, pos and alleles
   message("          Harmonizing column names for ",myTissue," number ",i," of ",length(myeQTLs))

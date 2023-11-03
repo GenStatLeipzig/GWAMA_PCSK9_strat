@@ -37,11 +37,32 @@ source("../helperFunctions/colocFunction_jp.R")
 #' # Prep data ####
 #' ***
 load("../results/05_1_usedGenes.RData")
-load("../results/03_GCTA_COJO.RData")
+load("../results/02_LociOverallPhenotypes_filtered.RData")
+IndepSignals = copy(result.5)
 table(is.element(IndepSignals$candidateGene,myGenTab$genename))
 matched = match(IndepSignals$candidateGene,myGenTab$genename)
 IndepSignals[,cytoband := myGenTab[matched,cytoband]]
 
+#' I want the long format again, so that I can extract the right phenotype per cytoband
+dumTab = foreach(i=1:dim(IndepSignals)[1])%do%{
+  #i=1
+  myRow = IndepSignals[i,]
+  otherPhenos = unlist(strsplit(myRow$other_phenotypes, "[|]"))
+  otherPhenos = gsub(" ","",otherPhenos)
+  phenos = c(myRow$phenotype,otherPhenos)
+  
+  dumTab2 = foreach(j=1:length(phenos))%do%{
+    #j=1
+    myRow2 = copy(myRow)
+    myRow2[,phenotype := phenos[j]]
+    myRow2
+  }
+  res = rbindlist(dumTab2)
+  res
+}
+IndepSignals = rbindlist(dumTab)
+
+#' Prep gene table
 myGenTab[,cytoband2 := cytoband]
 myGenTab[cytoband == "10q11.21-q11.22",cytoband2 := "10q11.21"]
 myGenTab[cytoband == "10q11.22",cytoband2 := "10q11.21"]
@@ -75,7 +96,7 @@ ToDoList[,pheno := gsub("_23.*","",pheno)]
 registerDoMC(cores=20)
 
 dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
-  #k=1
+  #k=5
   myPheno = ToDoList[k,pheno]
   # myPheno2 = gsub(myPheno,pattern="\\_.*",replacement = "")
   message("Working on phenotype ",myPheno)
@@ -93,14 +114,14 @@ dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
   data_GWAS[EAF>0.5,maf := 1-EAF]
   
   # relevant loci
-  # uniqueCytos1 = IndepSignals[pheno == myPheno, unique(cytoband)]
-  # uniqueCytos2 = myGenTab[cytoband2 %in% uniqueCytos1, unique(cytoband)]
-  uniqueCytos2 = myGenTab[, unique(cytoband)]
+  uniqueCytos1 = IndepSignals[phenotype == myPheno, unique(cytoband)]
+  uniqueCytos2 = myGenTab[cytoband2 %in% uniqueCytos1, unique(cytoband)]
+  #uniqueCytos2 = myGenTab[, unique(cytoband)]
   
   myeQTLs2<-dir(path = "../temp/05_coloc/",pattern = ".RData")
   
   dumTab2 = foreach(i=c(1:length(myeQTLs2)))%dopar%{
-    #i=4
+    #i=1
     loaded = load(paste0("../temp/05_coloc/",myeQTLs2[i]))
     data_eQTLs = get(loaded)
     myTissue2 = gsub("GTEx_v8_filtered_","",myeQTLs2[i])
@@ -114,7 +135,7 @@ dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
     dummy = dummy[gene %in% ToDoList2[,genename]]
     
     dumTab3 = foreach(j=c(1:dim(dummy)[1]))%do%{
-      #j=10
+      #j=8
       myRow = dummy[j,]
       moreInfo = copy(ToDoList2)
       moreInfo = moreInfo[genename == myRow$gene,]
@@ -148,7 +169,7 @@ dumTab = foreach(k=1:dim(ToDoList)[1])%do%{
       x4[,cytoband:=moreInfo$cytoband]
       x4[,gene:= myRow$gene]
       x4[,trait1:=myPheno]
-      x4[,trait2:=paste0("GE in ",myTissue2)]
+      x4[,trait2:=myTissue2]
       x4
       
     }

@@ -1,5 +1,5 @@
 #' ---
-#' title: "Main Figure 2: 3-way and 2-way interaction plots"
+#' title: "Main Figure 2: 2-way interaction plots"
 #' subtitle: "PCSK9 GWAMA sex-stratified"
 #' author: "Janne Pott"
 #' date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
@@ -46,14 +46,14 @@ IATab[IA_hierarch_fdr5proz == T,myLabel := paste0(candidateGene," \n",rsID," \n"
 myPlot1 = ggplot(IATab, aes(x=myX, y=myY, color=myLabel, alpha = IA_hierarch_fdr5proz)) +
   facet_wrap(~type, nrow = 1, 
              strip.position = "left", 
-             labeller = as_labeller(c("sexIA" = "SNP effect in females", 
-                                      "statinIA" = "SNP effect in statin-free") ) )+
-  geom_hline(yintercept = 0, color="grey", linetype="dashed", size=1.15)+
-  geom_vline(xintercept = 0, color="grey", linetype="dashed", size=1.15)+
-  geom_abline(intercept = 0,slope=1,color="grey", linetype="dashed", size=1.15)+
-  geom_point(size=2)+ 
-  geom_errorbar(aes(ymin = myY- 1.96*myY_SE, ymax = myY+ 1.96*myY_SE)) +
-  geom_errorbarh(aes(xmin = myX- 1.96*myX_SE, xmax = myX + 1.96*myX_SE)) +
+             labeller = as_labeller(c("sexIA" = "SNP effect in women", 
+                                      "statinIA" = "SNP effect in statin-free individuals") ) )+
+  geom_hline(yintercept = 0, color="grey", linetype="dashed", linewidth=1.15)+
+  geom_vline(xintercept = 0, color="grey", linetype="dashed", linewidth=1.15)+
+  geom_abline(intercept = 0,slope=1,color="grey", linetype="dashed", linewidth=1.15)+
+  geom_point(size=3)+ 
+  geom_errorbar(aes(ymin = myY- 1.96*myY_SE, ymax = myY+ 1.96*myY_SE),linewidth=1.1) +
+  geom_errorbarh(aes(xmin = myX- 1.96*myX_SE, xmax = myX + 1.96*myX_SE),linewidth=1.1) +
   theme_bw(base_size = 10) + 
   scale_colour_manual(values=c(brewer.pal(10, "Paired"),"#000000"))+
   scale_alpha_manual(values = c(0.3,1),labels = c("not significant", "significant"))+
@@ -68,20 +68,20 @@ myPlot1 = ggplot(IATab, aes(x=myX, y=myY, color=myLabel, alpha = IA_hierarch_fdr
         legend.text = element_text(size = 10))+
   ylab(NULL) +
   guides(alpha = NULL, size = NULL)+
-  labs(x="SNP effect in males                                                      SNP effect in statin-treated", 
+  labs(x="SNP effect in men / statin-treated individuals", 
        color="", alpha="") 
 
 myPlot1
 
 #' # Save plots ####
 #' ***
-tiff(filename = "../figures/MainFigure2_InteractionScatterPlot_230908.tiff",
-     width = 2250, height = 1125, res=200, compression = 'lzw')
+tiff(filename = "../figures/MainFigure2_InteractionScatterPlot_231101.tiff",
+     width = 2250, height = 1125, res=240, compression = 'lzw')
 myPlot1
 dev.off()
 
 #' # Sessioninfo ####
 #' ***
 sessionInfo()
-message("\nTOTAL TIME of script (in minutes): " ,round(difftime(Sys.time(), time0, tz,units = "mins"),2))
+message("\nTOTAL TIME of script (in minutes): " ,round(difftime(Sys.time(), time0,units = "mins"),2))
 

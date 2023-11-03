@@ -41,8 +41,8 @@ source("../helperFunctions/colocFunction_jp.R")
 
 #' # Get ToDoList ####
 #' ***
-load("../results/03_GCTA_COJO.RData")
-IndepSignals = IndepSignals[!duplicated(candidateGene)]
+load("../results/02_LociOverallPhenotypes_filtered.RData")
+IndepSignals = copy(result.5)
 
 ToDoList = data.table(NR = 1:8)
 
@@ -72,7 +72,7 @@ dumTab1 = foreach(i = 1:dim(ToDoList)[1])%do%{
     message("     Working on gene ",myRow$candidateGene)
     
     data_GWAS2 = copy(data_GWAS1)
-    data_GWAS2 = data_GWAS2[chr == myRow$Chr,]
+    data_GWAS2 = data_GWAS2[chr == myRow$chr,]
     data_GWAS2 = data_GWAS2[bp_hg19 >= myRow$region_start,]
     data_GWAS2 = data_GWAS2[bp_hg19 <= myRow$region_end,]
     data_GWAS2[,candidateGene := myRow$candidateGene]
@@ -86,7 +86,7 @@ dumTab1 = foreach(i = 1:dim(ToDoList)[1])%do%{
     
   }
   dumTab2 = rbindlist(dumTab2)
-  stopifnot(length(unique(dumTab2$candidateGene))==11)
+  stopifnot(length(unique(dumTab2$candidateGene))==dim(result.5)[1])
   dumTab2
 }
 data_GWAS = rbindlist(dumTab1)
@@ -411,6 +411,9 @@ ColocTable[,table(PP.H0.abf>=0.75)]
 ColocTable[PP.H4.abf>=0.75,]
 ColocTable[PP.H2.abf>=0.75,]
 ColocTable[PP.H1.abf>=0.75,]
+
+ColocTable[,trait1 := gsub("_combined","",trait1)]
+ColocTable[,trait2 := gsub("_combined","",trait2)]
 
 #' # Save results ####
 #' ***

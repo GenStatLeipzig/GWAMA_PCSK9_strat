@@ -30,7 +30,7 @@
 rm(list = ls())
 time0 = Sys.time()
 
-source("../SourceFile_forostar.R")
+source("../SourceFile_angmar.R")
 
 setwd(paste0(projectpath_main,"scripts/"))
 
@@ -60,8 +60,8 @@ tab3 = cbind(tab3,tab32)
 
 #' make pretty
 tab3[,phenotype := gsub("PCSK9_","",phenotype)]
-tab3[,phenotype := gsub("females_","F - ",phenotype)]
-tab3[,phenotype := gsub("females","F",phenotype)]
+tab3[,phenotype := gsub("females_","W - ",phenotype)]
+tab3[,phenotype := gsub("females","W",phenotype)]
 tab3[,phenotype := gsub("males_","M - ",phenotype)]
 tab3[,phenotype := gsub("males","M",phenotype)]
 
@@ -102,13 +102,13 @@ tab4 = copy(IATab_IVW)
 tab4 = tab4[setting == "all (fixed)",]
 tab4 = tab4[,c(2:4,6:8,10,11,13)]
 
-tab4[,trait1 := gsub("females_","F - ",trait1)]
-tab4[,trait1 := gsub("females","F",trait1)]
+tab4[,trait1 := gsub("females_","W - ",trait1)]
+tab4[,trait1 := gsub("females","W",trait1)]
 tab4[,trait1 := gsub("males_","M - ",trait1)]
 tab4[,trait1 := gsub("males","M",trait1)]
 
-tab4[,trait2 := gsub("females_","F - ",trait2)]
-tab4[,trait2 := gsub("females","F",trait2)]
+tab4[,trait2 := gsub("females_","W - ",trait2)]
+tab4[,trait2 := gsub("females","W",trait2)]
 tab4[,trait2 := gsub("males_","M - ",trait2)]
 tab4[,trait2 := gsub("males","M",trait2)]
 

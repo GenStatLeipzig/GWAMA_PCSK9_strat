@@ -38,6 +38,8 @@ source("../helperFunctions/colocFunction_jp.R")
 #' ***
 load("../temp/05_PCSK9cond.RData")
 data_GWAS[,.N,by=pheno]
+data_GWAS[grepl("rs693668",pheno),.N,by=pheno]
+data_GWAS[grepl("rs2495477",pheno),.N,by=pheno]
 
 #' Okay, how many tests will this create?
 #' 
@@ -50,8 +52,6 @@ data_GWAS[,.N,by=pheno]
 #' 
 #' 24 tests (4 SNPs)
 #' 
-data_GWAS_cond = copy(data_GWAS)
-
 #' # Run Coloc ####
 #' ***
 myPhenos = unique(data_GWAS$pheno)
@@ -69,11 +69,10 @@ dumTab1 = foreach(i=1:dim(ToDoList)[1])%do%{
   myRow = myRow[i,]
   
   dumTab2 = foreach(j=1:4)%do%{
-    #j=5
+    #j=2
     mySNP = mySNPs[j]
     trait1 = paste0("PCSK9_",myRow$trait1,"__",mySNP)
     trait2 = paste0("PCSK9_",myRow$trait2,"__",mySNP)
-    if(i==2)trait1 = paste0("PCSK9_",myRow$trait1,"__",mySNPs[5])
     
     data_GWAS_trait1 = copy(data_GWAS)
     data_GWAS_trait1 = data_GWAS_trait1[pheno == trait1,]
@@ -122,6 +121,9 @@ ColocTable[,table(PP.H0.abf>=0.75)]
 ColocTable[PP.H4.abf>=0.75,]
 ColocTable[PP.H3.abf>=0.75,]
 ColocTable[PP.H1.abf>=0.75,]
+
+ColocTable[,trait1 := paste0("PCSK9_",trait1)]
+ColocTable[,trait2 := paste0("PCSK9_",trait2)]
 
 #' # Save results ####
 #' ***

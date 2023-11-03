@@ -600,5 +600,5 @@ save(tab2_annot,tab3_annot,tab4a_annot,tab4b_annot,tab4c_annot,tab4d_annot,tab5a
 #' # SessionInfo ####
 #' ***
 sessionInfo()
-message("\nTOTAL TIME of script (in minutes): " ,round(difftime(Sys.time(), time0, tz,units = "mins"),2))
+message("\nTOTAL TIME of script (in minutes): " ,round(difftime(Sys.time(), time0,units = "mins"),2))
 

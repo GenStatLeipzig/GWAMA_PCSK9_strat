@@ -13,7 +13,6 @@
 #'
 #' # Introduction ####
 #' ***
-#' **Figure 2: Heatmap of the log10-transformed p-values at all valid loci**
 #' 
 #' 
 #' # Initialize ####
@@ -65,7 +64,7 @@ plotData6<-dcast(result.2,
 SNPID = as.character(plotData6$dumID1)
 phenotypes = colnames(plotData6)[-1]
 phenotypes = gsub("PCSK9_","",phenotypes)
-phenotypes = gsub("females","F",phenotypes)
+phenotypes = gsub("females","W",phenotypes)
 phenotypes = gsub("males","M",phenotypes)
 phenotypes = gsub("_"," - ",phenotypes)
 
@@ -124,7 +123,7 @@ plot1
 
 #' # Save plot ####
 #' ***
-tiff(filename = "../figures/MainFigure1_Heatmap_logp_230904.tiff",
+tiff(filename = "../figures/MainFigure1_Heatmap_logp_231101.tiff",
      width = 1200, height = 1400, res=250, compression = 'lzw')
 plot1
 dev.off()
@@ -132,4 +131,4 @@ dev.off()
 #' # Sessioninfo ####
 #' ***
 sessionInfo()
-message("\nTOTAL TIME of script (in minutes): " ,round(difftime(Sys.time(), time0, tz,units = "mins"),2))
+message("\nTOTAL TIME of script (in minutes): " ,round(difftime(Sys.time(), time0,units = "mins"),2))

@@ -381,7 +381,7 @@ plotData[,myX_SE := trait1_SE]
 plotData[,myY_SE := trait2_SE]
 
 myPlot1 = ggplot(plotData, aes(x=myX, y=myY, color=type,shape=setting)) +
-  facet_wrap(~type2, scales = "free", nrow = 1, 
+  facet_wrap(~type2, nrow = 1, #scales = "free", 
              strip.position = "left", 
              labeller = as_labeller(c("A) sex-interaction" = "Causal effect in females", 
                                       "B) statin-interaction" = "Causal effect in statin-free") ) )+

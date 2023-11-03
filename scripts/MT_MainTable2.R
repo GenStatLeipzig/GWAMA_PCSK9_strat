@@ -51,11 +51,11 @@ tab2
 
 #' # Add cytoband score ####
 #' ***
-toplist = fread("../../2307_GWAMA/06_Annotation2/results/synopsis/topliste_tabdelim/topliste_2023-07-26_PCSK9_strat.txt")
-toplist = toplist[markername %in% tab2$markername,]
-matched = match(tab2$markername,toplist$markername)
-table(tab2$markername == toplist[matched,markername])
-tab2[,cytoband := toplist[matched,cyto]]
+gwas_annot = fread(paste0(path_GenStatPipeline,"synopsis/topliste_tabdelim/topliste_2023-07-26_PCSK9_strat.txt"))
+gwas_annot = gwas_annot[markername %in% tab2$markername,]
+matched = match(tab2$markername,gwas_annot$markername)
+table(tab2$markername == gwas_annot[matched,markername])
+tab2[,cytoband := gwas_annot[matched,cyto]]
 tab2 = tab2[,c(9,1:8)]
 tab2
 
@@ -65,7 +65,7 @@ setnames(tab2,"markername","SNP")
 tab2[,SNP := gsub(":.*","",SNP)]
 
 tab2[,bestPheno := gsub("PCSK9_","",bestPheno)]
-tab2[,bestPheno := gsub("females_","F - ",bestPheno)]
+tab2[,bestPheno := gsub("females_","W - ",bestPheno)]
 tab2[,bestPheno := gsub("males_","M - ",bestPheno)]
 tab2[,bestPheno := gsub("males","M",bestPheno)]
 
@@ -83,9 +83,13 @@ setorder(tab2,type,IA_qval)
 
 #' # Save ####
 #' ***
+tag = format(Sys.time(), "%Y-%m-%d")
+tag2 = gsub("2023-","23-",tag)
+tag2 = gsub("-","",tag2)
+
 tosave4 = data.table(data = c("tab2"), 
                      SheetNames = c("MainTable2"))
-excel_fn = "../tables/MainTable2_230907.xlsx"
+excel_fn = paste0("../tables/MainTable2_",tag2,".xlsx")
 
 WriteXLS(tosave4$data, 
          ExcelFileName=excel_fn, 

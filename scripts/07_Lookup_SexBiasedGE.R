@@ -32,6 +32,8 @@ tab = tab[hugo_gene_id  %in% c("PCSK9","APOB","KHDRBS2" ,"PRKAG2","MARCHF8",
                                "KSR2", "NOS1","HPR", "HP","TM6SF2","CNKSR2")]
 tab2 = tab[pval_nominal_sb<0.05,]
 tab2
+tab2 = tab2[pvals.corrected<0.05,]
+tab2
 
 #' # Check gene expression ####
 #' ***
