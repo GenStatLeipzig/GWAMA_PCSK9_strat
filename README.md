@@ -6,7 +6,7 @@
 
 Supporting code for the following paper:
 
--   Pott J, et al. Working title: Sex- and statin-stratified GWAMA of PCSK9 reveal novel hits in Europeans
+-   Pott J, et al. Sex and statin-related genetic associations at the PCSK9 gene locus – results of genome-wide association meta-analysis. *Biology of Sex Differences*. 2023 (under review) 
 
 This project is an extension to our previous publications:
 
